@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* Onglets */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid var(--lima-border);
+            margin-bottom: 24px;
+        }
+        .tab {
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #64748b;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab:hover {
+            color: #334155;
+        }
+        .tab.active {
+            color: var(--lima-primary);
+            border-bottom-color: var(--lima-primary);
+        }
+
+        /* Grille de cartes */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
+        }
+
+        .item-card {
+            background: white;
+            border: 1px solid var(--lima-border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.15s;
+        }
+        .item-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .item-content { flex: 1; min-width: 0; }
+        .item-titre {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .item-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            margin: 2px 0 0 0;
+            font-family: monospace;
+        }
+
+        .item-delete {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .item-delete:hover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .priorite-color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px #cbd5e1;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        .empty-tab {
+            text-align: center;
+            padding: 48px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--lima-border);
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        /* Paramètres système */
+        .param-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            background: white;
+            border: 1px solid var(--lima-border);
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 640px) {
+            .param-row { grid-template-columns: 1fr; }
+        }
+        .param-key {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Technicien</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/technicien/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/technicien/signalements">
+                <i data-lucide="alert-circle" style="width:18px;height:18px"></i>
+                Signalements
+                <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+            </a>
+            <a href="/technicien/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+            <a href="/technicien/utilisateurs">
+                <i data-lucide="users" style="width:18px;height:18px"></i>
+                Utilisateurs
+            </a>
+            <a href="/technicien/statistiques">
+                <i data-lucide="bar-chart-3" style="width:18px;height:18px"></i>
+                Statistiques
+            </a>
+            <a href="/technicien/parametres" class="active">
+                <i data-lucide="settings" style="width:18px;height:18px"></i>
+                Paramètres
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Paramètres</h1>
+                <p class="page-subtitle">Configurez les données de référence du système</p>
+            </div>
+        </div>
+
+        <!-- ONGLETS -->
+        <div class="tabs">
+            <button class="tab active" data-tab="types">
+                <i data-lucide="hard-drive" style="width:16px;height:16px"></i>
+                Types d'équipement
+            </button>
+            <button class="tab" data-tab="services">
+                <i data-lucide="building-2" style="width:16px;height:16px"></i>
+                Services
+            </button>
+            <button class="tab" data-tab="priorites">
+                <i data-lucide="flag" style="width:16px;height:16px"></i>
+                Priorités
+            </button>
+            <button class="tab" data-tab="systeme">
+                <i data-lucide="sliders" style="width:16px;height:16px"></i>
+                Système
+            </button>
+        </div>
+
+        <!-- CONTENU DES ONGLETS -->
+        <div id="tab-content"></div>
+    </main>
+
+    <div id="modal-container"></div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let ongletActif = 'types';
+        let dataTypes = [];
+        let dataServices = [];
+        let dataPriorites = [];
+        let dataParametres = [];
+
+        // ---------- Chargement ----------
+        async function chargerTout() {
+            try {
+                [dataTypes, dataServices, dataPriorites, dataParametres] = await Promise.all([
+                    API.get('/types-equipement/'),
+                    API.get('/services/'),
+                    API.get('/priorites/'),
+                    API.get('/parametres/'),
+                ]);
+                afficherOnglet();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- Affichage selon onglet ----------
+        function afficherOnglet() {
+            const container = document.getElementById('tab-content');
+
+            switch (ongletActif) {
+                case 'types':    afficherTypes(container); break;
+                case 'services': afficherServices(container); break;
+                case 'priorites': afficherPriorites(container); break;
+                case 'systeme':  afficherSysteme(container); break;
+            }
+            lucide.createIcons();
+        }
+
+        // ---------- Types ----------
+        function afficherTypes(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i data-lucide="hard-drive" style="width:20px;height:20px;color:#1a237e"></i>
+                            Types d'équipement
+                            <span style="font-size:13px;font-weight:400;color:#94a3b8">(${dataTypes.length})</span>
+                        </h2>
+                        <button class="btn btn-primary btn-sm" onclick="ouvrirAjoutType()">
+                            <i data-lucide="plus" style="width:14px;height:14px"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                    ${dataTypes.length === 0
+                        ? `<div class="empty-tab">Aucun type enregistré. Cliquez sur "Ajouter" pour commencer.</div>`
+                        : `<div class="grid-2">
+                               ${dataTypes.map(t => `
+                                   <div class="item-card">
+                                       <div class="item-icon">
+                                           <i data-lucide="${iconeType(t.nom)}" style="width:18px;height:18px"></i>
+                                       </div>
+                                       <div class="item-content">
+                                           <p class="item-titre">${t.nom}</p>
+                                       </div>
+                                       <button class="item-delete" onclick="supprimerType(${t.id}, '${t.nom}')" title="Supprimer">
+                                           <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+                                       </button>
+                                   </div>
+                               `).join('')}
+                           </div>`
+                    }
+                </div>
+            `;
+        }
+
+        function iconeType(nom) {
+            const map = {
+                'PC': 'monitor',
+                'Imprimante': 'printer',
+                'Scanner': 'scan',
+                'Écran': 'monitor',
+                'Clavier': 'keyboard',
+                'Souris': 'mouse',
+                'Onduleur': 'battery-charging',
+                'Routeur': 'wifi',
+            };
+            return map[nom] || 'hard-drive';
+        }
+
+        function ouvrirAjoutType() {
+            afficherModalForm(
+                'Nouveau type d\'équipement',
+                'hard-drive',
+                `
+                    <div style="margin-bottom:16px">
+                        <label class="label">Nom du type *</label>
+                        <input type="text" id="form-nom" class="input" placeholder="Ex : Webcam, Casque, Projecteur...">
+                    </div>
+                `,
+                async () => {
+                    const nom = document.getElementById('form-nom').value.trim();
+                    if (!nom) return Modal.alert('Nom requis', 'warning');
+                    await API.post('/types-equipement/', { nom });
+                    Toast.show('Type ajouté', 'success');
+                    fermerModal();
+                    await chargerTout();
+                }
+            );
+        }
+
+        async function supprimerType(id, nom) {
+            const ok = await Modal.confirm(
+                `Supprimer le type <strong>${nom}</strong> ?`,
+                { title: 'Suppression', confirmText: 'Supprimer', type: 'danger' }
+            );
+            if (!ok) return;
+            try {
+                await API.delete(`/types-equipement/${id}`);
+                Toast.show('Type supprimé', 'success');
+                await chargerTout();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- Services ----------
+        function afficherServices(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i data-lucide="building-2" style="width:20px;height:20px;color:#1a237e"></i>
+                            Services
+                            <span style="font-size:13px;font-weight:400;color:#94a3b8">(${dataServices.length})</span>
+                        </h2>
+                        <button class="btn btn-primary btn-sm" onclick="ouvrirAjoutService()">
+                            <i data-lucide="plus" style="width:14px;height:14px"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                    ${dataServices.length === 0
+                        ? `<div class="empty-tab">Aucun service enregistré.</div>`
+                        : `<div class="grid-2">
+                               ${dataServices.map(s => `
+                                   <div class="item-card">
+                                       <div class="item-icon">
+                                           <i data-lucide="building" style="width:18px;height:18px"></i>
+                                       </div>
+                                       <div class="item-content">
+                                           <p class="item-titre">${s.nom}</p>
+                                       </div>
+                                       <button class="item-delete" onclick="supprimerService(${s.id}, '${s.nom}')" title="Supprimer">
+                                           <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+                                       </button>
+                                   </div>
+                               `).join('')}
+                           </div>`
+                    }
+                </div>
+            `;
+        }
+
+        function ouvrirAjoutService() {
+            afficherModalForm(
+                'Nouveau service',
+                'building-2',
+                `
+                    <div style="margin-bottom:16px">
+                        <label class="label">Nom du service *</label>
+                        <input type="text" id="form-nom" class="input" placeholder="Ex : Marketing, Technique, Logistique...">
+                    </div>
+                `,
+                async () => {
+                    const nom = document.getElementById('form-nom').value.trim();
+                    if (!nom) return Modal.alert('Nom requis', 'warning');
+                    await API.post('/services/', { nom });
+                    Toast.show('Service ajouté', 'success');
+                    fermerModal();
+                    await chargerTout();
+                }
+            );
+        }
+
+        async function supprimerService(id, nom) {
+            const ok = await Modal.confirm(
+                `Supprimer le service <strong>${nom}</strong> ?<br><br>Les employés liés perdront leur service.`,
+                { title: 'Suppression', confirmText: 'Supprimer', type: 'danger' }
+            );
+            if (!ok) return;
+            try {
+                await API.delete(`/services/${id}`);
+                Toast.show('Service supprimé', 'success');
+                await chargerTout();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- Priorités ----------
+        function afficherPriorites(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i data-lucide="flag" style="width:20px;height:20px;color:#1a237e"></i>
+                            Priorités
+                            <span style="font-size:13px;font-weight:400;color:#94a3b8">(${dataPriorites.length})</span>
+                        </h2>
+                        <button class="btn btn-primary btn-sm" onclick="ouvrirAjoutPriorite()">
+                            <i data-lucide="plus" style="width:14px;height:14px"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                    ${dataPriorites.length === 0
+                        ? `<div class="empty-tab">Aucune priorité enregistrée.</div>`
+                        : `<div class="grid-2">
+                               ${dataPriorites.map(p => `
+                                   <div class="item-card">
+                                       <div class="priorite-color-dot" style="background:${p.couleur}"></div>
+                                       <div class="item-content">
+                                           <p class="item-titre">${p.nom}</p>
+                                           <p class="item-sub">${p.couleur} · Ordre ${p.ordre}</p>
+                                       </div>
+                                       <button class="item-delete" onclick="supprimerPriorite(${p.id}, '${p.nom}')" title="Supprimer">
+                                           <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+                                       </button>
+                                   </div>
+                               `).join('')}
+                           </div>`
+                    }
+                </div>
+            `;
+        }
+
+        function ouvrirAjoutPriorite() {
+            afficherModalForm(
+                'Nouvelle priorité',
+                'flag',
+                `
+                    <div class="form-row">
+                        <div>
+                            <label class="label">Nom *</label>
+                            <input type="text" id="form-nom" class="input" placeholder="Ex : Critique, Faible...">
+                        </div>
+                        <div>
+                            <label class="label">Couleur *</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="color" id="form-couleur" value="#3b82f6"
+                                       style="width:50px;height:40px;border-radius:8px;border:1px solid #e2e8f0;cursor:pointer">
+                                <input type="text" id="form-couleur-hex" class="input" value="#3b82f6"
+                                       oninput="document.getElementById('form-couleur').value = this.value">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px">
+                        <label class="label">Ordre d'affichage *</label>
+                        <input type="number" id="form-ordre" class="input" value="4" min="1">
+                    </div>
+                `,
+                async () => {
+                    const nom = document.getElementById('form-nom').value.trim();
+                    const couleur = document.getElementById('form-couleur').value;
+                    const ordre = parseInt(document.getElementById('form-ordre').value) || 1;
+
+                    if (!nom) return Modal.alert('Nom requis', 'warning');
+
+                    await API.post('/priorites/', { nom, couleur, ordre });
+                    Toast.show('Priorité ajoutée', 'success');
+                    fermerModal();
+                    await chargerTout();
+                },
+                () => {
+                    // Sync hex → color picker
+                    const hex = document.getElementById('form-couleur-hex');
+                    const color = document.getElementById('form-couleur');
+                    color.addEventListener('input', () => hex.value = color.value);
+                }
+            );
+        }
+
+        async function supprimerPriorite(id, nom) {
+            const ok = await Modal.confirm(
+                `Supprimer la priorité <strong>${nom}</strong> ?`,
+                { title: 'Suppression', confirmText: 'Supprimer', type: 'danger' }
+            );
+            if (!ok) return;
+            try {
+                await API.delete(`/priorites/${id}`);
+                Toast.show('Priorité supprimée', 'success');
+                await chargerTout();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- Système ----------
+        function afficherSysteme(container) {
+            container.innerHTML = `
+                <div class="card">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i data-lucide="sliders" style="width:20px;height:20px;color:#1a237e"></i>
+                            Paramètres système
+                            <span style="font-size:13px;font-weight:400;color:#94a3b8">(${dataParametres.length})</span>
+                        </h2>
+                        <button class="btn btn-primary btn-sm" onclick="ouvrirAjoutParametre()">
+                            <i data-lucide="plus" style="width:14px;height:14px"></i>
+                            Ajouter
+                        </button>
+                    </div>
+                    ${dataParametres.length === 0
+                        ? `<div class="empty-tab">Aucun paramètre enregistré.</div>`
+                        : dataParametres.map(p => `
+                            <div class="param-row">
+                                <div>
+                                    <div class="param-key">${p.cle}</div>
+                                </div>
+                                <input type="text" class="input" value="${p.valeur || ''}"
+                                       onchange="modifierParametre('${p.cle}', this.value)">
+                                <button class="item-delete" onclick="supprimerParametre('${p.cle}')">
+                                    <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+                                </button>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            `;
+        }
+
+        function ouvrirAjoutParametre() {
+            afficherModalForm(
+                'Nouveau paramètre',
+                'sliders',
+                `
+                    <div style="margin-bottom:16px">
+                        <label class="label">Clé *</label>
+                        <input type="text" id="form-cle" class="input" placeholder="Ex : delai_alerte_heures" style="font-family:monospace">
+                        <p style="font-size:11px;color:#94a3b8;margin-top:4px">Utilisez des underscores, pas d'espaces</p>
+                    </div>
+                    <div style="margin-bottom:16px">
+                        <label class="label">Valeur</label>
+                        <input type="text" id="form-valeur" class="input" placeholder="Ex : 48">
+                    </div>
+                `,
+                async () => {
+                    const cle = document.getElementById('form-cle').value.trim();
+                    const valeur = document.getElementById('form-valeur').value.trim();
+
+                    if (!cle) return Modal.alert('Clé requise', 'warning');
+
+                    await API.post('/parametres/', { cle, valeur });
+                    Toast.show('Paramètre ajouté', 'success');
+                    fermerModal();
+                    await chargerTout();
+                }
+            );
+        }
+
+        async function modifierParametre(cle, valeur) {
+            try {
+                await API.put(`/parametres/${cle}`, { cle, valeur });
+                Toast.show('Paramètre modifié', 'success');
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        async function supprimerParametre(cle) {
+            const ok = await Modal.confirm(
+                `Supprimer le paramètre <strong>${cle}</strong> ?`,
+                { title: 'Suppression', confirmText: 'Supprimer', type: 'danger' }
+            );
+            if (!ok) return;
+            try {
+                await API.delete(`/parametres/${cle}`);
+                Toast.show('Paramètre supprimé', 'success');
+                await chargerTout();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- Modal générique ----------
+        function afficherModalForm(titre, icone, contenuHtml, onSave, onReady) {
+            const container = document.getElementById('modal-container');
+            const html = `
+                <div class="modal-backdrop" id="form-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:540px;text-align:left">
+                        <button class="modal-close" onclick="fermerModal()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+                        <h2 class="modal-title" style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                            <i data-lucide="${icone}" style="width:22px;height:22px;color:#1a237e"></i>
+                            ${titre}
+                        </h2>
+                        ${contenuHtml}
+                        <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e2e8f0;margin-top:8px">
+                            <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                            <button type="button" class="btn btn-primary" id="modal-save-btn">
+                                <i data-lucide="check" style="width:16px;height:16px"></i>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('form-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'form-backdrop') fermerModal();
+            });
+
+            document.getElementById('modal-save-btn').addEventListener('click', onSave);
+
+            if (onReady) onReady();
+        }
+
+        function fermerModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        // ---------- Onglets ----------
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                ongletActif = tab.dataset.tab;
+                afficherOnglet();
+            });
+        });
+
+        // ---------- Init ----------
+        (async () => {
+            const user = await Auth.check('technicien');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await chargerTout();
+            await WS.updateBadge();
+        })();
+    </script>
+</body>
+</html>

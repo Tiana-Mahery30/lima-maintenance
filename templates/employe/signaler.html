@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouveau signalement - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 1024px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-section {
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .form-section:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+
+        .form-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+
+        .form-section-num {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            color: #1a237e;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* Priorité chips */
+        .priorite-chips {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .priorite-chip {
+            position: relative;
+            padding: 14px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .priorite-chip:hover {
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
+        }
+        .priorite-chip.selected {
+            border-color: #3949ab;
+            background-color: #f0f3ff;
+        }
+        .priorite-chip-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+        }
+        .priorite-chip-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+        }
+        .priorite-chip-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .priorite-chip.selected .priorite-chip-label {
+            color: #1a237e;
+        }
+
+        /* Photo dropzone moderne */
+        .photo-dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #f8fafc;
+        }
+        .photo-dropzone:hover {
+            border-color: #3949ab;
+            background-color: #f0f3ff;
+        }
+        .photo-dropzone.dragover {
+            border-color: #3949ab;
+            background-color: #e0e7ff;
+            transform: scale(1.01);
+        }
+        .photo-dropzone-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            color: #1a237e;
+        }
+
+        .photo-preview-wrapper {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .photo-preview-wrapper img {
+            width: 100%;
+            display: block;
+            max-height: 300px;
+            object-fit: cover;
+        }
+        .photo-remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .photo-remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        /* Sidebar récap */
+        .recap-sidebar {
+            position: sticky;
+            top: 24px;
+        }
+        .recap-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .recap-item:last-child {
+            border-bottom: none;
+        }
+        .recap-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #64748b;
+        }
+        .recap-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        .recap-value {
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+            margin-top: 2px;
+            word-break: break-word;
+        }
+
+        .btn-submit-large {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Employé</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/employe/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/employe/signaler" class="active">
+                <i data-lucide="plus-circle" style="width:18px;height:18px"></i>
+                Nouveau signalement
+            </a>
+            <a href="/employe/mes-signalements">
+                <i data-lucide="list" style="width:18px;height:18px"></i>
+                Mes signalements
+            </a>
+            <a href="/employe/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Nouveau signalement</h1>
+                <p class="page-subtitle">Décrivez votre panne, le technicien s'en occupera</p>
+            </div>
+            <a href="/employe/dashboard" class="btn btn-secondary">
+                <i data-lucide="arrow-left" style="width:16px;height:16px"></i>
+                Retour
+            </a>
+        </div>
+
+        <form id="signaler-form">
+            <div class="form-grid">
+
+                <!-- ============ COLONNE GAUCHE : FORMULAIRE ============ -->
+                <div class="card">
+
+                    <!-- Section 1 : Équipement -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <span class="form-section-num">1</span>
+                            Équipement concerné
+                        </div>
+                        <select id="equipement" class="select" required>
+                            <option value="">Chargement des équipements...</option>
+                        </select>
+                        <p style="font-size:12px;color:#94a3b8;margin-top:8px;display:flex;align-items:center;gap:6px">
+                            <i data-lucide="info" style="width:14px;height:14px"></i>
+                            Sélectionnez le matériel qui présente une panne
+                        </p>
+                    </div>
+
+                    <!-- Section 2 : Priorité -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <span class="form-section-num">2</span>
+                            Niveau de priorité
+                        </div>
+                        <div class="priorite-chips" id="priorite-chips">
+                            <div class="priorite-chip" data-priorite="">
+                                <div class="priorite-chip-dot" style="background:#cbd5e1"></div>
+                                <div class="priorite-chip-label">Chargement</div>
+                                <div class="priorite-chip-desc">...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3 : Description -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <span class="form-section-num">3</span>
+                            Description de la panne
+                        </div>
+                        <textarea id="description" class="textarea" rows="6"
+                                  placeholder="Décrivez précisément le problème : que se passe-t-il, depuis quand, dans quelles circonstances..."
+                                  required></textarea>
+                        <div style="display:flex;justify-content:space-between;margin-top:8px">
+                            <p style="font-size:12px;color:#94a3b8;margin:0">
+                                Plus vous êtes précis, plus le technicien pourra intervenir rapidement
+                            </p>
+                            <p style="font-size:12px;color:#94a3b8;margin:0" id="char-count">0 caractère</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 4 : Photo -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <span class="form-section-num">4</span>
+                            Photo (optionnelle)
+                        </div>
+
+                        <div id="photo-dropzone" class="photo-dropzone">
+                            <input type="file" id="photo" accept="image/*" style="display:none">
+                            <div class="photo-dropzone-icon">
+                                <i data-lucide="image-plus" style="width:26px;height:26px"></i>
+                            </div>
+                            <p style="font-size:14px;color:#334155;margin:0 0 4px 0;font-weight:500">
+                                Cliquez ou glissez une image ici
+                            </p>
+                            <p style="font-size:12px;color:#94a3b8;margin:0">
+                                JPG, PNG, WEBP — 5 Mo maximum
+                            </p>
+                        </div>
+
+                        <div id="photo-preview" style="display:none">
+                            <div class="photo-preview-wrapper">
+                                <img id="photo-img" alt="Aperçu">
+                                <button type="button" id="photo-remove" class="photo-remove-btn" title="Retirer la photo">
+                                    <i data-lucide="x" style="width:16px;height:16px"></i>
+                                </button>
+                            </div>
+                            <p id="photo-name" style="font-size:12px;color:#64748b;margin:8px 0 0 0;display:flex;align-items:center;gap:6px">
+                                <i data-lucide="image" style="width:14px;height:14px"></i>
+                                <span></span>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ============ COLONNE DROITE : RÉCAP + ACTIONS ============ -->
+                <div class="recap-sidebar">
+
+                    <!-- Récap -->
+                    <div class="card" style="margin-bottom:16px">
+                        <h3 style="font-size:14px;font-weight:600;margin:0 0 16px 0;display:flex;align-items:center;gap:8px">
+                            <i data-lucide="clipboard-check" style="width:16px;height:16px;color:#1a237e"></i>
+                            Récapitulatif
+                        </h3>
+
+                        <div class="recap-item">
+                            <div class="recap-icon">
+                                <i data-lucide="monitor" style="width:16px;height:16px"></i>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="recap-label">Équipement</div>
+                                <div class="recap-value" id="recap-equipement">Non sélectionné</div>
+                            </div>
+                        </div>
+
+                        <div class="recap-item">
+                            <div class="recap-icon">
+                                <i data-lucide="flag" style="width:16px;height:16px"></i>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="recap-label">Priorité</div>
+                                <div class="recap-value" id="recap-priorite">Non sélectionnée</div>
+                            </div>
+                        </div>
+
+                        <div class="recap-item">
+                            <div class="recap-icon">
+                                <i data-lucide="user" style="width:16px;height:16px"></i>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="recap-label">Signalé par</div>
+                                <div class="recap-value" data-user-nom>-</div>
+                            </div>
+                        </div>
+
+                        <div class="recap-item">
+                            <div class="recap-icon">
+                                <i data-lucide="calendar" style="width:16px;height:16px"></i>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <div class="recap-label">Date</div>
+                                <div class="recap-value" id="recap-date">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info box -->
+                    <div class="card" style="margin-bottom:16px;background:#f0f3ff;border-color:#c7d2fe">
+                        <div style="display:flex;gap:10px">
+                            <i data-lucide="info" style="width:18px;height:18px;color:#1a237e;flex-shrink:0;margin-top:2px"></i>
+                            <div>
+                                <p style="font-size:13px;font-weight:600;color:#1a237e;margin:0 0 4px 0">
+                                    Et après ?
+                                </p>
+                                <p style="font-size:12px;color:#4338ca;margin:0;line-height:1.5">
+                                    Votre signalement sera transmis au technicien. Vous recevrez une notification dès sa prise en charge.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card">
+                        <button type="submit" class="btn btn-primary btn-submit-large" id="submit-btn">
+                            <i data-lucide="send" style="width:16px;height:16px"></i>
+                            <span id="submit-text">Envoyer le signalement</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="history.back()">
+                            Annuler
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let photoFile = null;
+        let prioritesData = [];
+        let equipementsData = [];
+
+        // ---------- Date du jour ----------
+        const now = new Date();
+        document.getElementById('recap-date').textContent = now.toLocaleDateString('fr-FR', {
+            day: '2-digit', month: 'long', year: 'numeric'
+        });
+
+        // ---------- Charger les équipements ----------
+        async function chargerEquipements() {
+            try {
+                equipementsData = await API.get('/equipements/');
+                const select = document.getElementById('equipement');
+
+                if (equipementsData.length === 0) {
+                    select.innerHTML = '<option value="">Aucun équipement enregistré</option>';
+                    return;
+                }
+
+                select.innerHTML = '<option value="">-- Sélectionnez un équipement --</option>' +
+                    equipementsData.map(e => `
+                        <option value="${e.id}">
+                            ${e.type ? e.type.nom : 'Équipement'} — ${e.marque} ${e.modele || ''} (${e.numero_serie})
+                        </option>
+                    `).join('');
+
+                select.addEventListener('change', () => {
+                    const id = parseInt(select.value);
+                    const eq = equipementsData.find(e => e.id === id);
+                    document.getElementById('recap-equipement').textContent = eq
+                        ? `${eq.type ? eq.type.nom : 'Équip.'} ${eq.marque} ${eq.modele || ''}`
+                        : 'Non sélectionné';
+                });
+            } catch (err) {
+                console.error(err);
+                Modal.alert('Impossible de charger les équipements', 'danger');
+            }
+        }
+
+        // ---------- Charger les priorités ----------
+        async function chargerPriorites() {
+            try {
+                prioritesData = await API.get('/priorites/');
+                const container = document.getElementById('priorite-chips');
+
+                const descriptions = {
+                    'Basse': 'Peut attendre',
+                    'Normale': 'Gêne l\'activité',
+                    'Urgente': 'Bloque le travail',
+                };
+
+                container.innerHTML = prioritesData.map(p => `
+                    <div class="priorite-chip" data-priorite="${p.id}" data-nom="${p.nom}">
+                        <div class="priorite-chip-dot" style="background:${p.couleur}"></div>
+                        <div class="priorite-chip-label">${p.nom}</div>
+                        <div class="priorite-chip-desc">${descriptions[p.nom] || ''}</div>
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('.priorite-chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        container.querySelectorAll('.priorite-chip').forEach(c => c.classList.remove('selected'));
+                        chip.classList.add('selected');
+                        document.getElementById('recap-priorite').textContent = chip.dataset.nom;
+                    });
+                });
+
+                // Sélectionner Normale par défaut
+                const normale = container.querySelector('[data-nom="Normale"]');
+                if (normale) {
+                    normale.click();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ---------- Photo ----------
+        const dropzone = document.getElementById('photo-dropzone');
+        const photoInput = document.getElementById('photo');
+        const preview = document.getElementById('photo-preview');
+        const photoImg = document.getElementById('photo-img');
+        const photoName = document.getElementById('photo-name');
+
+        dropzone.addEventListener('click', () => photoInput.click());
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            });
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            if (e.dataTransfer.files.length > 0) {
+                photoInput.files = e.dataTransfer.files;
+                afficherPhoto(e.dataTransfer.files[0]);
+            }
+        });
+
+        photoInput.addEventListener('change', () => {
+            if (photoInput.files.length > 0) {
+                afficherPhoto(photoInput.files[0]);
+            }
+        });
+
+        function afficherPhoto(file) {
+            if (!file.type.startsWith('image/')) {
+                Modal.alert('Seules les images sont autorisées', 'warning');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                Modal.alert('L\'image ne doit pas dépasser 5 Mo', 'warning');
+                return;
+            }
+
+            photoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                photoImg.src = e.target.result;
+                photoName.querySelector('span').textContent = file.name;
+                preview.style.display = 'block';
+                dropzone.style.display = 'none';
+                lucide.createIcons();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('photo-remove').addEventListener('click', () => {
+            photoFile = null;
+            photoInput.value = '';
+            preview.style.display = 'none';
+            dropzone.style.display = 'block';
+        });
+
+        // ---------- Compteur de caractères ----------
+        const desc = document.getElementById('description');
+        const charCount = document.getElementById('char-count');
+        desc.addEventListener('input', () => {
+            const n = desc.value.length;
+            charCount.textContent = `${n} caractère${n > 1 ? 's' : ''}`;
+        });
+
+        // ---------- Soumission ----------
+        document.getElementById('signaler-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const equipementId = document.getElementById('equipement').value;
+            const prioriteChip = document.querySelector('.priorite-chip.selected');
+            const prioriteId = prioriteChip ? prioriteChip.dataset.priorite : null;
+            const description = desc.value.trim();
+
+            if (!equipementId) {
+                await Modal.alert('Veuillez sélectionner un équipement', 'warning');
+                return;
+            }
+            if (!prioriteId) {
+                await Modal.alert('Veuillez sélectionner une priorité', 'warning');
+                return;
+            }
+            if (description.length < 10) {
+                await Modal.alert('La description doit faire au moins 10 caractères', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('submit-text');
+            btn.disabled = true;
+            btnText.textContent = 'Envoi en cours...';
+
+            try {
+                const formData = new FormData();
+                formData.append('equipement_id', equipementId);
+                formData.append('priorite_id', prioriteId);
+                formData.append('description_panne', description);
+                if (photoFile) {
+                    formData.append('photo', photoFile);
+                }
+
+                const result = await API.upload('/interventions/', formData);
+
+                await Modal.alert(
+                    `Votre signalement <strong>#${result.id}</strong> a bien été enregistré.<br><br>Le technicien sera notifié et vous recevrez une notification dès sa prise en charge.`,
+                    'success',
+                    'Signalement envoyé'
+                );
+
+                window.location.href = '/employe/mes-signalements';
+            } catch (err) {
+                console.error(err);
+                await Modal.alert(err.message || 'Erreur lors de l\'envoi', 'danger');
+                btn.disabled = false;
+                btnText.textContent = 'Envoyer le signalement';
+            }
+        });
+
+        // ---------- Init ----------
+        (async () => {
+            const user = await Auth.check('employe');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await Promise.all([chargerEquipements(), chargerPriorites()]);
+            lucide.createIcons();
+        })();
+    </script>
+</body>
+</html>

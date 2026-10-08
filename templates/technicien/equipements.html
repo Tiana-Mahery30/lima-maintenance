@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Équipements - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .mini-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        .mini-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--lima-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mini-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .mini-stat-icon-primary { background: #e0e7ff; color: #1a237e; }
+        .mini-stat-icon-success { background: #d1fae5; color: #065f46; }
+        .mini-stat-icon-info { background: #dbeafe; color: #1e40af; }
+        .mini-stat-icon-warning { background: #fef3c7; color: #92400e; }
+        .mini-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+        .mini-stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            background-color: white;
+            border: 1px solid var(--lima-border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-chip:hover {
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .filter-chip.active {
+            background-color: var(--lima-primary);
+            color: white;
+            border-color: var(--lima-primary);
+        }
+        .filter-chip-count {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+        .filter-chip.active .filter-chip-count {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            max-width: 360px;
+            margin-left: auto;
+            position: relative;
+        }
+        .search-box input {
+            padding-left: 38px;
+            background: white;
+        }
+        .search-box-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* Grid équipements */
+        .equip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        .equip-card {
+            background: white;
+            border: 1px solid var(--lima-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .equip-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+        .equip-card-image {
+            height: 160px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .equip-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .equip-card-image-count {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.75);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .equip-card-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+        .equip-card:hover .equip-card-actions {
+            opacity: 1;
+        }
+        .card-action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            transition: all 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .card-action-btn:hover {
+            background: white;
+            color: #1a237e;
+            transform: scale(1.1);
+        }
+        .card-action-btn.danger:hover {
+            color: #ef4444;
+        }
+
+        .equip-card-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .equip-card-type {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .equip-card-nom {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 4px 0;
+        }
+        .equip-card-serial {
+            font-size: 12px;
+            color: #94a3b8;
+            font-family: 'Monaco', monospace;
+            margin: 0 0 4px 0;
+        }
+        .equip-card-date {
+            font-size: 11px;
+            color: #94a3b8;
+            margin: 0 0 12px 0;
+        }
+        .equip-card-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        .badge-statut {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .badge-statut .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .badge-disponible {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .badge-disponible .dot { background-color: #10b981; }
+        .badge-occupe {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-occupe .dot { background-color: #3b82f6; }
+        .badge-maintenance {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .badge-maintenance .dot { background-color: #f59e0b; }
+        .badge-hors-service {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .badge-hors-service .dot { background-color: #94a3b8; }
+
+        .badge-etat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .badge-fonctionnel {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .badge-en-panne {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--lima-border);
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: #94a3b8;
+        }
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 4px 0;
+        }
+        .empty-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+        }
+
+        /* Modal formulaire */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        /* Upload photos */
+        .photo-uploader {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .photo-uploader-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            background: #f8fafc;
+        }
+        .photo-uploader-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .photo-uploader-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-dropzone-small {
+            aspect-ratio: 1;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #f8fafc;
+            color: #94a3b8;
+            transition: all 0.15s;
+            font-size: 11px;
+        }
+        .photo-dropzone-small:hover {
+            border-color: #3949ab;
+            background: #f0f3ff;
+            color: #1a237e;
+        }
+
+        /* Détail modal */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .detail-info-item {
+            background-color: #f8fafc;
+            padding: 14px 16px;
+            border-radius: 10px;
+        }
+        .detail-info-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .detail-info-value {
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .galerie {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .galerie-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+        }
+        .galerie-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .galerie-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .galerie-item .galerie-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .galerie-item:hover .galerie-delete {
+            display: flex;
+        }
+
+        .histo-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .histo-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .histo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .histo-icon.terminee { background: #d1fae5; color: #065f46; }
+        .histo-icon.en_cours { background: #dbeafe; color: #1e40af; }
+        .histo-icon.en_attente { background: #fef3c7; color: #92400e; }
+        .histo-titre {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 2px 0;
+        }
+        .histo-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0 0 2px 0;
+        }
+        .histo-date {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Technicien</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/technicien/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/technicien/signalements">
+                <i data-lucide="alert-circle" style="width:18px;height:18px"></i>
+                Signalements
+                <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+            </a>
+            <a href="/technicien/equipements" class="active">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+            <a href="/technicien/utilisateurs">
+                <i data-lucide="users" style="width:18px;height:18px"></i>
+                Utilisateurs
+            </a>
+            <a href="/technicien/statistiques">
+                <i data-lucide="bar-chart-3" style="width:18px;height:18px"></i>
+                Statistiques
+            </a>
+            <a href="/technicien/parametres">
+                <i data-lucide="settings" style="width:18px;height:18px"></i>
+                Paramètres
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Équipements</h1>
+                <p class="page-subtitle">Gérez le parc informatique de l'entreprise</p>
+            </div>
+            <button class="btn btn-primary" onclick="ouvrirFormAjout()">
+                <i data-lucide="plus" style="width:16px;height:16px"></i>
+                Nouvel équipement
+            </button>
+        </div>
+
+        <div class="mini-stats">
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-primary">
+                    <i data-lucide="hard-drive" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-total">-</div>
+                    <div class="mini-stat-label">Total</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-success">
+                    <i data-lucide="check-circle" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-dispo">-</div>
+                    <div class="mini-stat-label">Disponibles</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-info">
+                    <i data-lucide="user-check" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-occupe">-</div>
+                    <div class="mini-stat-label">Occupés</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-warning">
+                    <i data-lucide="alert-triangle" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-panne">-</div>
+                    <div class="mini-stat-label">En panne</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-chips" id="filter-chips">
+                <button class="filter-chip active" data-statut="">
+                    Tous
+                    <span class="filter-chip-count" id="count-tous">0</span>
+                </button>
+                <button class="filter-chip" data-statut="disponible">
+                    Disponibles
+                    <span class="filter-chip-count" id="count-dispo">0</span>
+                </button>
+                <button class="filter-chip" data-statut="occupé">
+                    Occupés
+                    <span class="filter-chip-count" id="count-occupe">0</span>
+                </button>
+                <button class="filter-chip" data-etat="en panne">
+                    En panne
+                    <span class="filter-chip-count" id="count-panne">0</span>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i data-lucide="search" class="search-box-icon" style="width:18px;height:18px"></i>
+                <input type="text" id="search-input" class="input" placeholder="Rechercher...">
+            </div>
+        </div>
+
+        <div id="equip-container">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i data-lucide="loader" style="width:28px;height:28px"></i>
+                </div>
+                <p class="empty-text">Chargement...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-container"></div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let tousEquipements = [];
+        let typesEquipement = [];
+        let utilisateurs = [];
+        let filtreStatut = '';
+        let filtreEtat = '';
+        let filtreRecherche = '';
+        let photosAjout = [];  // Fichiers en attente pour l'ajout
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+        }
+
+        function getInitiales(nom) {
+            if (!nom) return '?';
+            return nom.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        function iconeTypeEquipement(nomType) {
+            const map = {
+                'PC': 'monitor',
+                'Imprimante': 'printer',
+                'Scanner': 'scan',
+                'Écran': 'monitor',
+                'Clavier': 'keyboard',
+                'Souris': 'mouse',
+                'Onduleur': 'battery-charging',
+                'Routeur': 'wifi',
+            };
+            return map[nomType] || 'hard-drive';
+        }
+
+        function badgeStatutEquip(statut) {
+            const map = {
+                'disponible': '<span class="badge-statut badge-disponible"><span class="dot"></span>Disponible</span>',
+                'occupé': '<span class="badge-statut badge-occupe"><span class="dot"></span>Occupé</span>',
+                'occupe': '<span class="badge-statut badge-occupe"><span class="dot"></span>Occupé</span>',
+                'en maintenance': '<span class="badge-statut badge-maintenance"><span class="dot"></span>En maintenance</span>',
+                'hors service': '<span class="badge-statut badge-hors-service"><span class="dot"></span>Hors service</span>',
+            };
+            return map[statut] || `<span class="badge-statut badge-hors-service">${statut}</span>`;
+        }
+
+        function badgeEtat(etat) {
+            if (etat === 'fonctionnel') {
+                return '<span class="badge-etat badge-fonctionnel">Fonctionnel</span>';
+            }
+            return '<span class="badge-etat badge-en-panne">En panne</span>';
+        }
+
+        // ---------- Chargement ----------
+        async function charger() {
+            try {
+                [tousEquipements, typesEquipement, utilisateurs] = await Promise.all([
+                    API.get('/equipements/'),
+                    API.get('/types-equipement/'),
+                    API.get('/utilisateurs/'),
+                ]);
+                mettreAJourCompteurs();
+                afficher();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function mettreAJourCompteurs() {
+            const stats = {
+                total: tousEquipements.length,
+                dispo: tousEquipements.filter(e => e.statut === 'disponible').length,
+                occupe: tousEquipements.filter(e => e.statut === 'occupé' || e.statut === 'occupe').length,
+                panne: tousEquipements.filter(e => e.etat === 'en panne').length,
+            };
+
+            document.getElementById('mini-total').textContent = stats.total;
+            document.getElementById('mini-dispo').textContent = stats.dispo;
+            document.getElementById('mini-occupe').textContent = stats.occupe;
+            document.getElementById('mini-panne').textContent = stats.panne;
+
+            document.getElementById('count-tous').textContent = stats.total;
+            document.getElementById('count-dispo').textContent = stats.dispo;
+            document.getElementById('count-occupe').textContent = stats.occupe;
+            document.getElementById('count-panne').textContent = stats.panne;
+        }
+
+        function afficher() {
+            const container = document.getElementById('equip-container');
+
+            let liste = tousEquipements;
+
+            if (filtreStatut) {
+                if (filtreStatut === 'occupé') {
+                    liste = liste.filter(e => e.statut === 'occupé' || e.statut === 'occupe');
+                } else {
+                    liste = liste.filter(e => e.statut === filtreStatut);
+                }
+            }
+            if (filtreEtat) {
+                liste = liste.filter(e => e.etat === filtreEtat);
+            }
+            if (filtreRecherche) {
+                const q = filtreRecherche.toLowerCase();
+                liste = liste.filter(e =>
+                    e.marque.toLowerCase().includes(q) ||
+                    (e.modele || '').toLowerCase().includes(q) ||
+                    e.numero_serie.toLowerCase().includes(q) ||
+                    (e.type ? e.type.nom.toLowerCase().includes(q) : false)
+                );
+            }
+
+            if (liste.length === 0) {
+                const vide = tousEquipements.length === 0;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i data-lucide="${vide ? 'inbox' : 'search-x'}" style="width:32px;height:32px"></i>
+                        </div>
+                        <p class="empty-title">${vide ? 'Aucun équipement enregistré' : 'Aucun résultat'}</p>
+                        <p class="empty-text">
+                            ${vide
+                                ? 'Commencez par ajouter votre premier équipement au parc.'
+                                : 'Essayez de modifier vos filtres.'}
+                        </p>
+                        ${vide
+                            ? `<button class="btn btn-primary" onclick="ouvrirFormAjout()">
+                                   <i data-lucide="plus" style="width:16px;height:16px"></i>
+                                   Ajouter un équipement
+                               </button>`
+                            : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="equip-grid">
+                    ${liste.map(e => {
+                        const img = e.images && e.images.length > 0 ? e.images[0].chemin : null;
+                        const nbImages = e.images ? e.images.length : 0;
+                        return `
+                            <div class="equip-card">
+                                <div class="equip-card-image" onclick="voirDetail(${e.id})">
+                                    ${img
+                                        ? `<img src="${img}" alt="${e.marque}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i data-lucide=\\'hard-drive\\' style=\\'width:48px;height:48px\\'></i>'; lucide.createIcons();">`
+                                        : `<i data-lucide="${iconeTypeEquipement(e.type ? e.type.nom : '')}" style="width:48px;height:48px"></i>`
+                                    }
+                                    ${nbImages > 1
+                                        ? `<div class="equip-card-image-count">
+                                               <i data-lucide="image" style="width:12px;height:12px"></i>
+                                               ${nbImages}
+                                           </div>`
+                                        : ''}
+                                    <div class="equip-card-actions" onclick="event.stopPropagation()">
+                                        <button class="card-action-btn" title="Modifier" onclick="ouvrirFormModif(${e.id})">
+                                            <i data-lucide="pencil" style="width:14px;height:14px"></i>
+                                        </button>
+                                        <button class="card-action-btn danger" title="Supprimer" onclick="supprimerEquipement(${e.id})">
+                                            <i data-lucide="trash-2" style="width:14px;height:14px"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="equip-card-body">
+                                    <div class="equip-card-type">${e.type ? e.type.nom : 'Équipement'}</div>
+                                    <h3 class="equip-card-nom">${e.marque} ${e.modele || ''}</h3>
+                                    <p class="equip-card-serial">${e.numero_serie}</p>
+                                    <p class="equip-card-date">
+                                        ${e.date_acquisition ? `Acquis le ${formatDate(e.date_acquisition)}` : 'Date d\'acquisition non renseignée'}
+                                    </p>
+                                    <div class="equip-card-badges">
+                                        ${badgeStatutEquip(e.statut)}
+                                        ${badgeEtat(e.etat)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // ---------- FORMULAIRE AJOUT ----------
+        function ouvrirFormAjout() {
+            photosAjout = [];
+            const container = document.getElementById('modal-container');
+
+            const html = `
+                <div class="modal-backdrop" id="form-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:720px;text-align:left">
+                        <button class="modal-close" onclick="fermerModal()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <h2 class="modal-title" style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                            <i data-lucide="plus-circle" style="width:22px;height:22px;color:#1a237e"></i>
+                            Nouvel équipement
+                        </h2>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="label">Type *</label>
+                                <select id="form-type" class="select">
+                                    <option value="">-- Sélectionner --</option>
+                                    ${typesEquipement.map(t => `<option value="${t.id}">${t.nom}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Marque *</label>
+                                <input type="text" id="form-marque" class="input" placeholder="Ex : HP, Dell, Canon...">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="label">Modèle</label>
+                                <input type="text" id="form-modele" class="input" placeholder="Ex : ProBook 450 G8">
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Numéro de série *</label>
+                                <input type="text" id="form-serial" class="input" placeholder="Ex : HP-001">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="label">Date d'acquisition</label>
+                                <input type="date" id="form-date" class="input">
+                                <p style="font-size:11px;color:#94a3b8;margin-top:4px">Date d'achat / réception du matériel</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="label">Statut</label>
+                                <select id="form-statut" class="select">
+                                    <option value="disponible">Disponible</option>
+                                    <option value="occupé">Occupé</option>
+                                    <option value="en maintenance">En maintenance</option>
+                                    <option value="hors service">Hors service</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="label">État</label>
+                                <select id="form-etat" class="select">
+                                    <option value="fonctionnel">Fonctionnel</option>
+                                    <option value="en panne">En panne</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:24px">
+                            <label class="label">Photos</label>
+                            <p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0">
+                                Ajoutez une ou plusieurs photos de l'équipement (optionnel)
+                            </p>
+                            <div id="photo-uploader" class="photo-uploader"></div>
+                            <input type="file" id="photo-input" accept="image/*" multiple style="display:none">
+                        </div>
+
+                        <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e2e8f0">
+                            <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                            <button type="button" class="btn btn-primary" id="save-btn" onclick="enregistrerEquipement()">
+                                <i data-lucide="check" style="width:16px;height:16px"></i>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('form-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'form-backdrop') fermerModal();
+            });
+
+            // Uploader
+            rafraichirUploader();
+
+            const photoInput = document.getElementById('photo-input');
+            photoInput.addEventListener('change', (e) => {
+                Array.from(e.target.files).forEach(f => {
+                    if (f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024) {
+                        photosAjout.push(f);
+                    }
+                });
+                rafraichirUploader();
+                photoInput.value = '';
+            });
+        }
+
+        function rafraichirUploader() {
+            const uploader = document.getElementById('photo-uploader');
+            if (!uploader) return;
+
+            const photoInput = document.getElementById('photo-input');
+
+            uploader.innerHTML = `
+                ${photosAjout.map((f, i) => {
+                    const url = URL.createObjectURL(f);
+                    return `
+                        <div class="photo-uploader-item">
+                            <img src="${url}" alt="Aperçu">
+                            <button type="button" class="remove-btn" onclick="retirerPhoto(${i})">
+                                <i data-lucide="x" style="width:12px;height:12px"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('')}
+                <div class="photo-dropzone-small" onclick="document.getElementById('photo-input').click()">
+                    <i data-lucide="image-plus" style="width:22px;height:22px;margin-bottom:4px"></i>
+                    <span>Ajouter</span>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function retirerPhoto(i) {
+            photosAjout.splice(i, 1);
+            rafraichirUploader();
+        }
+
+        async function enregistrerEquipement() {
+            const type_id = document.getElementById('form-type').value;
+            const marque = document.getElementById('form-marque').value.trim();
+            const modele = document.getElementById('form-modele').value.trim();
+            const numero_serie = document.getElementById('form-serial').value.trim();
+            const date_acquisition = document.getElementById('form-date').value;
+            const statut = document.getElementById('form-statut').value;
+            const etat = document.getElementById('form-etat').value;
+
+            if (!type_id) return Modal.alert('Sélectionnez un type', 'warning');
+            if (!marque) return Modal.alert('Indiquez la marque', 'warning');
+            if (!numero_serie) return Modal.alert('Indiquez le numéro de série', 'warning');
+
+            const btn = document.getElementById('save-btn');
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('type_id', type_id);
+                formData.append('marque', marque);
+                if (modele) formData.append('modele', modele);
+                formData.append('numero_serie', numero_serie);
+                if (date_acquisition) formData.append('date_acquisition', date_acquisition);
+                formData.append('statut', statut);
+                formData.append('etat', etat);
+                photosAjout.forEach(f => formData.append('images', f));
+
+                await API.upload('/equipements/', formData);
+                Toast.show('Équipement ajouté', 'success');
+                fermerModal();
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+                btn.disabled = false;
+            }
+        }
+
+        // ---------- FORMULAIRE MODIFICATION ----------
+        function ouvrirFormModif(id) {
+    const e = tousEquipements.find(x => x.id === id);
+    if (!e) return;
+
+    const container = document.getElementById('modal-container');
+
+    const dateValue = e.date_acquisition ? e.date_acquisition.split('T')[0] : '';
+
+    const html = `
+        <div class="modal-backdrop" id="form-backdrop">
+            <div class="modal-box modal-box-lg" style="position:relative;max-width:720px;text-align:left">
+                <button class="modal-close" onclick="fermerModal()">
+                    <i data-lucide="x" style="width:18px;height:18px"></i>
+                </button>
+
+                <h2 class="modal-title" style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                    <i data-lucide="pencil" style="width:22px;height:22px;color:#1a237e"></i>
+                    Modifier l'équipement
+                </h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="label">Type *</label>
+                        <select id="form-type" class="select">
+                            ${typesEquipement.map(t => `<option value="${t.id}" ${t.id === e.type_id ? 'selected' : ''}>${t.nom}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Marque *</label>
+                        <input type="text" id="form-marque" class="input" value="${e.marque}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="label">Modèle</label>
+                        <input type="text" id="form-modele" class="input" value="${e.modele || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Numéro de série *</label>
+                        <input type="text" id="form-serial" class="input" value="${e.numero_serie}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="label">Date d'acquisition</label>
+                        <input type="date" id="form-date" class="input" value="${dateValue}">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Statut</label>
+                        <select id="form-statut" class="select">
+                            <option value="disponible" ${e.statut === 'disponible' ? 'selected' : ''}>Disponible</option>
+                            <option value="occupé" ${e.statut === 'occupé' || e.statut === 'occupe' ? 'selected' : ''}>Occupé</option>
+                            <option value="en maintenance" ${e.statut === 'en maintenance' ? 'selected' : ''}>En maintenance</option>
+                            <option value="hors service" ${e.statut === 'hors service' ? 'selected' : ''}>Hors service</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="label">État</label>
+                        <select id="form-etat" class="select">
+                            <option value="fonctionnel" ${e.etat === 'fonctionnel' ? 'selected' : ''}>Fonctionnel</option>
+                            <option value="en panne" ${e.etat === 'en panne' ? 'selected' : ''}>En panne</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px">
+                    <label class="label">Photos actuelles</label>
+                    <p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0">
+                        Cliquez sur le X rouge pour supprimer une photo
+                    </p>
+                    <div id="galerie-edit" class="photo-uploader">
+                        ${(e.images || []).map(img => `
+                            <div class="photo-uploader-item">
+                                <img src="${img.chemin}" alt="Photo">
+                                <button type="button" class="remove-btn" onclick="supprimerPhotoEquip(${img.id}, ${id})">
+                                    <i data-lucide="x" style="width:12px;height:12px"></i>
+                                </button>
+                            </div>
+                        `).join('')}
+                        <div class="photo-dropzone-small" onclick="document.getElementById('photo-add-input').click()">
+                            <i data-lucide="image-plus" style="width:22px;height:22px;margin-bottom:4px"></i>
+                            <span>Ajouter</span>
+                        </div>
+                    </div>
+                    <input type="file" id="photo-add-input" accept="image/*" multiple style="display:none">
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e2e8f0">
+                    <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="enregistrerModif(${id})">
+                        <i data-lucide="check" style="width:16px;height:16px"></i>
+                        Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+    lucide.createIcons();
+
+    document.getElementById('form-backdrop').addEventListener('click', (ev) => {
+        if (ev.target.id === 'form-backdrop') fermerModal();
+    });
+
+    const input = document.getElementById('photo-add-input');
+    input.addEventListener('change', async (ev) => {
+        if (ev.target.files.length === 0) return;
+
+        const formData = new FormData();
+        Array.from(ev.target.files).forEach(f => formData.append('images', f));
+
+        try {
+            await API.upload(`/equipements/${id}/images`, formData);
+            Toast.show('Photos ajoutées', 'success');
+            await charger();
+            ouvrirFormModif(id);
+        } catch (err) {
+            Modal.alert(err.message, 'danger');
+        }
+    });
+}
+
+async function supprimerPhotoEquip(photoId, equipementId) {
+    const ok = await Modal.confirm('Supprimer cette photo ?', {
+        title: 'Suppression', confirmText: 'Supprimer', type: 'danger'
+    });
+    if (!ok) return;
+
+    try {
+        await API.delete(`/equipements/images/${photoId}`);
+        Toast.show('Photo supprimée', 'success');
+        await charger();
+        ouvrirFormModif(equipementId);
+    } catch (err) {
+        Modal.alert(err.message, 'danger');
+    }
+}
+
+async function enregistrerModif(id) {
+    const type_id = document.getElementById('form-type').value;
+    const marque = document.getElementById('form-marque').value.trim();
+    const modele = document.getElementById('form-modele').value.trim();
+    const numero_serie = document.getElementById('form-serial').value.trim();
+    const date_acquisition = document.getElementById('form-date').value;
+    const statut = document.getElementById('form-statut').value;
+    const etat = document.getElementById('form-etat').value;
+
+    if (!type_id) return Modal.alert('Type requis', 'warning');
+    if (!marque) return Modal.alert('Marque requise', 'warning');
+    if (!numero_serie) return Modal.alert('Numéro de série requis', 'warning');
+
+    const data = {
+        type_id: parseInt(type_id),
+        marque,
+        modele: modele || null,
+        numero_serie,
+        statut,
+        etat,
+    };
+
+    if (date_acquisition) {
+        data.date_acquisition = date_acquisition;
+    }
+
+    try {
+        await API.put(`/equipements/${id}`, data);
+        Toast.show('Équipement modifié', 'success');
+        fermerModal();
+        await charger();
+    } catch (err) {
+        Modal.alert(err.message, 'danger');
+    }
+}
+
+async function voirDetail(id) {
+            const e = tousEquipements.find(x => x.id === id);
+            if (!e) return;
+
+            let historique = [];
+            try {
+                historique = await API.get(`/interventions/equipement/${id}/historique`);
+            } catch (err) { /* ignore */ }
+
+            const container = document.getElementById('modal-container');
+
+            const html = `
+                <div class="modal-backdrop" id="detail-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:800px;text-align:left">
+                        <button class="modal-close" onclick="fermerModal()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <div class="detail-header">
+                            <div style="display:flex;align-items:center;gap:14px">
+                                <div style="width:52px;height:52px;border-radius:12px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;color:#1a237e;flex-shrink:0">
+                                    <i data-lucide="${iconeTypeEquipement(e.type ? e.type.nom : '')}" style="width:26px;height:26px"></i>
+                                </div>
+                                <div>
+                                    <h2 style="font-size:18px;font-weight:700;margin:0;color:#1e293b">
+                                        ${e.marque} ${e.modele || ''}
+                                    </h2>
+                                    <p style="font-size:13px;color:#94a3b8;margin:2px 0 0 0;font-family:monospace">
+                                        ${e.numero_serie}
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                ${badgeStatutEquip(e.statut)}
+                                ${badgeEtat(e.etat)}
+                            </div>
+                        </div>
+
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Type</div>
+                                <div class="detail-info-value">${e.type ? e.type.nom : '-'}</div>
+                            </div>
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Date d'acquisition</div>
+                                <div class="detail-info-value">${e.date_acquisition ? formatDate(e.date_acquisition) : 'Non renseignée'}</div>
+                            </div>
+                        </div>
+
+                        ${e.images && e.images.length > 0 ? `
+                            <div class="detail-section">
+                                <div class="detail-section-title">
+                                    <i data-lucide="images" style="width:16px;height:16px"></i>
+                                    Photos (${e.images.length})
+                                </div>
+                                <div class="galerie">
+                                    ${e.images.map(img => `
+                                        <div class="galerie-item" onclick="window.open('${img.chemin}', '_blank')">
+                                            <img src="${img.chemin}" alt="Photo">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="detail-section" style="margin-bottom:0">
+                            <div class="detail-section-title">
+                                <i data-lucide="history" style="width:16px;height:16px"></i>
+                                Historique des pannes (${historique.length})
+                            </div>
+                            ${historique.length === 0
+                                ? '<p style="font-size:13px;color:#94a3b8;text-align:center;padding:20px 0;margin:0">Aucune intervention pour cet équipement</p>'
+                                : `<div>
+                                       ${historique.map(h => `
+                                           <div class="histo-item">
+                                               <div class="histo-icon ${h.statut}">
+                                                   <i data-lucide="${h.statut === 'terminee' ? 'check' : h.statut === 'en_cours' ? 'loader' : 'clock'}" style="width:16px;height:16px"></i>
+                                               </div>
+                                               <div style="flex:1;min-width:0">
+                                                   <p class="histo-titre">Signalement #${h.id}</p>
+                                                   <p class="histo-desc">${h.description_panne.substring(0, 80)}${h.description_panne.length > 80 ? '...' : ''}</p>
+                                                   <p class="histo-date">${formatDate(h.date_signalement)}</p>
+                                               </div>
+                                           </div>
+                                       `).join('')}
+                                   </div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('detail-backdrop').addEventListener('click', (ev) => {
+                if (ev.target.id === 'detail-backdrop') fermerModal();
+            });
+        }
+
+        // ---------- SUPPRESSION ----------
+        async function supprimerEquipement(id) {
+            const e = tousEquipements.find(x => x.id === id);
+            if (!e) return;
+
+            const ok = await Modal.confirm(
+                `Supprimer l'équipement <strong>${e.marque} ${e.modele || ''}</strong> ?<br><br>Il sera archivé mais son historique sera conservé.`,
+                { title: 'Suppression', confirmText: 'Supprimer', type: 'danger' }
+            );
+            if (!ok) return;
+
+            try {
+                await API.delete(`/equipements/${id}`);
+                Toast.show('Équipement archivé', 'success');
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function fermerModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        // ---------- FILTRES ----------
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                filtreStatut = chip.dataset.statut || '';
+                filtreEtat = chip.dataset.etat || '';
+                afficher();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (ev) => {
+            filtreRecherche = ev.target.value.trim();
+            afficher();
+        });
+
+        (async () => {
+            const user = await Auth.check('technicien');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await charger();
+            await WS.updateBadge();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes signalements - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* ============ STATS CARDS (compactes) ============ */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .mini-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        .mini-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--lima-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.15s;
+        }
+        .mini-stat:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .mini-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .mini-stat-icon-primary { background: #e0e7ff; color: #1a237e; }
+        .mini-stat-icon-warning { background: #fef3c7; color: #92400e; }
+        .mini-stat-icon-info { background: #dbeafe; color: #1e40af; }
+        .mini-stat-icon-success { background: #d1fae5; color: #065f46; }
+        .mini-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+        .mini-stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        /* ============ FILTRES ============ */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            background-color: white;
+            border: 1px solid var(--lima-border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-chip:hover {
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .filter-chip.active {
+            background-color: var(--lima-primary);
+            color: white;
+            border-color: var(--lima-primary);
+        }
+        .filter-chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .filter-chip-count {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+        .filter-chip.active .filter-chip-count {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 240px;
+            max-width: 400px;
+            margin-left: auto;
+            position: relative;
+        }
+        .search-box input {
+            padding-left: 38px;
+            background: white;
+        }
+        .search-box-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* ============ TABLE AMÉLIORÉE ============ */
+        .signal-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .signal-table thead tr {
+            background-color: #f8fafc;
+        }
+        .signal-table th {
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+            border-bottom: 1px solid var(--lima-border);
+        }
+        .signal-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        .signal-table tbody tr {
+            transition: background-color 0.1s;
+            cursor: pointer;
+        }
+        .signal-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        .signal-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Cellule ID */
+        .cell-id {
+            font-weight: 700;
+            color: var(--lima-primary);
+            font-size: 14px;
+        }
+
+        /* Cellule Équipement */
+        .cell-equipement {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .equip-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+        .equip-nom {
+            font-weight: 500;
+            color: #1e293b;
+            font-size: 13px;
+        }
+        .equip-serial {
+            font-size: 11px;
+            color: #94a3b8;
+            font-family: 'Monaco', monospace;
+        }
+
+        /* Cellule description */
+        .cell-desc {
+            max-width: 320px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #475569;
+        }
+
+        /* Priorité */
+        .priorite-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #334155;
+        }
+        .priorite-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Badge statut avec dot */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+        .status-badge .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .status-attente {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .status-attente .status-dot { background-color: #f59e0b; }
+        .status-cours {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .status-cours .status-dot { background-color: #3b82f6; }
+        .status-terminee {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-terminee .status-dot { background-color: #10b981; }
+
+        /* Bouton action */
+        .btn-view {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+            background: white;
+            border: 1px solid var(--lima-border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-view:hover {
+            background-color: #f1f5f9;
+            color: var(--lima-primary);
+            border-color: #cbd5e1;
+        }
+
+        /* ============ EMPTY STATE ============ */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: #94a3b8;
+        }
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 4px 0;
+        }
+        .empty-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+        }
+
+        /* ============ MODAL DÉTAIL ============ */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .detail-info-item {
+            background-color: #f8fafc;
+            padding: 14px 16px;
+            border-radius: 10px;
+        }
+        .detail-info-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .detail-info-value {
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .detail-section-content {
+            background-color: #f8fafc;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute;
+            left: -28px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: white;
+            border: 3px solid #cbd5e1;
+        }
+        .timeline-dot.terminee { border-color: #10b981; }
+        .timeline-dot.en_cours { border-color: #3b82f6; }
+        .timeline-dot.en_attente { border-color: #f59e0b; }
+        .timeline-item:not(:last-child) .timeline-dot::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 100%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 24px;
+            background-color: #e2e8f0;
+        }
+        .timeline-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        /* Commentaires */
+        .commentaires-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            padding-right: 4px;
+        }
+        .commentaire {
+            display: flex;
+            gap: 10px;
+        }
+        .commentaire-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .commentaire-body {
+            flex: 1;
+            background-color: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 10px;
+        }
+        .commentaire-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .commentaire-auteur {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .commentaire-date {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .commentaire-contenu {
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Employé</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/employe/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/employe/signaler">
+                <i data-lucide="plus-circle" style="width:18px;height:18px"></i>
+                Nouveau signalement
+            </a>
+            <a href="/employe/mes-signalements" class="active">
+                <i data-lucide="list" style="width:18px;height:18px"></i>
+                Mes signalements
+            </a>
+            <a href="/employe/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Mes signalements</h1>
+                <p class="page-subtitle">Suivez l'état de vos demandes de dépannage</p>
+            </div>
+            <a href="/employe/signaler" class="btn btn-primary">
+                <i data-lucide="plus" style="width:16px;height:16px"></i>
+                Nouveau signalement
+            </a>
+        </div>
+
+        <!-- STATS MINI -->
+        <div class="mini-stats">
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-primary">
+                    <i data-lucide="clipboard-list" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-total">-</div>
+                    <div class="mini-stat-label">Total</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-warning">
+                    <i data-lucide="clock" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-attente">-</div>
+                    <div class="mini-stat-label">En attente</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-info">
+                    <i data-lucide="loader" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-cours">-</div>
+                    <div class="mini-stat-label">En cours</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-success">
+                    <i data-lucide="check-circle" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-terminee">-</div>
+                    <div class="mini-stat-label">Terminés</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTRES -->
+        <div class="filter-bar">
+            <div class="filter-chips" id="filter-chips">
+                <button class="filter-chip active" data-statut="">
+                    Tous
+                    <span class="filter-chip-count" id="count-tous">0</span>
+                </button>
+                <button class="filter-chip" data-statut="en_attente">
+                    <span class="filter-chip-dot" style="background:#f59e0b"></span>
+                    En attente
+                    <span class="filter-chip-count" id="count-attente">0</span>
+                </button>
+                <button class="filter-chip" data-statut="en_cours">
+                    <span class="filter-chip-dot" style="background:#3b82f6"></span>
+                    En cours
+                    <span class="filter-chip-count" id="count-cours">0</span>
+                </button>
+                <button class="filter-chip" data-statut="terminee">
+                    <span class="filter-chip-dot" style="background:#10b981"></span>
+                    Terminés
+                    <span class="filter-chip-count" id="count-terminee">0</span>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i data-lucide="search" class="search-box-icon" style="width:18px;height:18px"></i>
+                <input type="text" id="search-input" class="input" placeholder="Rechercher...">
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card" style="padding:0;overflow:hidden">
+            <div id="table-container">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i data-lucide="loader" style="width:28px;height:28px"></i>
+                    </div>
+                    <p class="empty-text">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="detail-modal-container"></div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let toutesInterventions = [];
+        let filtreStatut = '';
+        let filtreRecherche = '';
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function formatDateCourte(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+        }
+
+        function badgeStatut(statut) {
+            const map = {
+                'en_attente': '<span class="status-badge status-attente"><span class="status-dot"></span>En attente</span>',
+                'en_cours': '<span class="status-badge status-cours"><span class="status-dot"></span>En cours</span>',
+                'terminee': '<span class="status-badge status-terminee"><span class="status-dot"></span>Terminé</span>',
+            };
+            return map[statut] || statut;
+        }
+
+        function iconeTypeEquipement(nomType) {
+            const map = {
+                'PC': 'monitor',
+                'Imprimante': 'printer',
+                'Scanner': 'scan',
+                'Écran': 'monitor',
+                'Clavier': 'keyboard',
+                'Souris': 'mouse',
+                'Onduleur': 'battery-charging',
+                'Routeur': 'wifi',
+            };
+            return map[nomType] || 'hard-drive';
+        }
+
+        async function charger() {
+            try {
+                toutesInterventions = await API.get('/interventions/');
+                mettreAJourCompteurs();
+                afficher();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function mettreAJourCompteurs() {
+            const stats = {
+                total: toutesInterventions.length,
+                attente: toutesInterventions.filter(i => i.statut === 'en_attente').length,
+                cours: toutesInterventions.filter(i => i.statut === 'en_cours').length,
+                terminee: toutesInterventions.filter(i => i.statut === 'terminee').length,
+            };
+
+            document.getElementById('mini-total').textContent = stats.total;
+            document.getElementById('mini-attente').textContent = stats.attente;
+            document.getElementById('mini-cours').textContent = stats.cours;
+            document.getElementById('mini-terminee').textContent = stats.terminee;
+
+            document.getElementById('count-tous').textContent = stats.total;
+            document.getElementById('count-attente').textContent = stats.attente;
+            document.getElementById('count-cours').textContent = stats.cours;
+            document.getElementById('count-terminee').textContent = stats.terminee;
+        }
+
+        function afficher() {
+            const container = document.getElementById('table-container');
+
+            let liste = toutesInterventions;
+
+            if (filtreStatut) {
+                liste = liste.filter(i => i.statut === filtreStatut);
+            }
+            if (filtreRecherche) {
+                const q = filtreRecherche.toLowerCase();
+                liste = liste.filter(i =>
+                    i.description_panne.toLowerCase().includes(q) ||
+                    (i.actions_realisees || '').toLowerCase().includes(q) ||
+                    (i.resultat || '').toLowerCase().includes(q) ||
+                    (i.equipement ? (i.equipement.marque + ' ' + (i.equipement.modele || '')).toLowerCase().includes(q) : false)
+                );
+            }
+
+            if (liste.length === 0) {
+                const vide = toutesInterventions.length === 0;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i data-lucide="${vide ? 'inbox' : 'search-x'}" style="width:32px;height:32px"></i>
+                        </div>
+                        <p class="empty-title">
+                            ${vide ? 'Aucun signalement pour le moment' : 'Aucun résultat'}
+                        </p>
+                        <p class="empty-text">
+                            ${vide
+                                ? 'Vous n\'avez encore créé aucun signalement.'
+                                : 'Essayez de modifier vos filtres ou votre recherche.'}
+                        </p>
+                        ${vide
+                            ? `<a href="/employe/signaler" class="btn btn-primary">
+                                   <i data-lucide="plus" style="width:16px;height:16px"></i>
+                                   Créer mon premier signalement
+                               </a>`
+                            : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="signal-table">
+                    <thead>
+                        <tr>
+                            <th style="width:80px">ID</th>
+                            <th style="width:130px">Date</th>
+                            <th>Équipement</th>
+                            <th>Description</th>
+                            <th style="width:110px">Priorité</th>
+                            <th style="width:130px">Statut</th>
+                            <th style="width:100px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${liste.map(i => `
+                            <tr onclick="voirDetail(${i.id})">
+                                <td><span class="cell-id">#${i.id}</span></td>
+                                <td>${formatDateCourte(i.date_signalement)}</td>
+                                <td>
+                                    <div class="cell-equipement">
+                                        <div class="equip-icon">
+                                            <i data-lucide="${iconeTypeEquipement(i.equipement ? i.equipement.type?.nom : '')}" style="width:18px;height:18px"></i>
+                                        </div>
+                                        <div>
+                                            <div class="equip-nom">
+                                                ${i.equipement
+                                                    ? `${i.equipement.marque} ${i.equipement.modele || ''}`
+                                                    : `Équipement #${i.equipement_id}`}
+                                            </div>
+                                            <div class="equip-serial">
+                                                ${i.equipement ? i.equipement.numero_serie : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-desc">${i.description_panne}</div>
+                                </td>
+                                <td>
+                                    ${i.priorite
+                                        ? `<span class="priorite-badge">
+                                               <span class="priorite-dot" style="background:${i.priorite.couleur}"></span>
+                                               ${i.priorite.nom}
+                                           </span>`
+                                        : '-'}
+                                </td>
+                                <td>${badgeStatut(i.statut)}</td>
+                                <td onclick="event.stopPropagation()">
+                                    <button class="btn-view" onclick="voirDetail(${i.id})">
+                                        <i data-lucide="eye" style="width:13px;height:13px"></i>
+                                        Détail
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            lucide.createIcons();
+        }
+
+        async function voirDetail(id) {
+            const intervention = toutesInterventions.find(i => i.id === id);
+            if (!intervention) return;
+
+            let commentaires = [];
+            try {
+                commentaires = await API.get(`/commentaires/intervention/${id}`);
+            } catch (e) { /* ignore */ }
+
+            const container = document.getElementById('detail-modal-container');
+            const user = API.getUser();
+
+            const html = `
+                <div class="modal-backdrop" id="detail-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:800px;text-align:left">
+                        <button class="modal-close" onclick="fermerDetail()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <div class="detail-header">
+                            <div>
+                                <h2 style="font-size:20px;font-weight:700;margin:0;color:#1a237e">
+                                    Signalement #${intervention.id}
+                                </h2>
+                                <p style="font-size:13px;color:#94a3b8;margin:4px 0 0 0">
+                                    Créé le ${formatDate(intervention.date_signalement)}
+                                </p>
+                            </div>
+                            <div>${badgeStatut(intervention.statut)}</div>
+                        </div>
+
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Équipement</div>
+                                <div class="detail-info-value">
+                                    ${intervention.equipement
+                                        ? `${intervention.equipement.marque} ${intervention.equipement.modele || ''} — ${intervention.equipement.numero_serie}`
+                                        : `Équipement #${intervention.equipement_id}`}
+                                </div>
+                            </div>
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Priorité</div>
+                                <div class="detail-info-value">
+                                    ${intervention.priorite
+                                        ? `<span class="priorite-badge">
+                                               <span class="priorite-dot" style="background:${intervention.priorite.couleur}"></span>
+                                               ${intervention.priorite.nom}
+                                           </span>`
+                                        : '-'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">
+                                <i data-lucide="alert-circle" style="width:16px;height:16px"></i>
+                                Description de la panne
+                            </div>
+                            <div class="detail-section-content">${intervention.description_panne}</div>
+                        </div>
+
+                        ${intervention.photo_panne ? `
+                            <div class="detail-section">
+                                <div class="detail-section-title">
+                                    <i data-lucide="image" style="width:16px;height:16px"></i>
+                                    Photo jointe
+                                </div>
+                                <img src="${intervention.photo_panne}" alt="Photo"
+                                     style="max-width:100%;max-height:300px;border-radius:10px;border:1px solid #e2e8f0"
+                                     onerror="this.style.display='none'">
+                            </div>
+                        ` : ''}
+
+                        ${intervention.actions_realisees ? `
+                            <div class="detail-section">
+                                <div class="detail-section-title">
+                                    <i data-lucide="wrench" style="width:16px;height:16px"></i>
+                                    Actions réalisées
+                                </div>
+                                <div class="detail-section-content">${intervention.actions_realisees}</div>
+                            </div>
+                        ` : ''}
+
+                        ${intervention.resultat ? `
+                            <div class="detail-section">
+                                <div class="detail-section-title">
+                                    <i data-lucide="check-circle" style="width:16px;height:16px"></i>
+                                    Résultat
+                                </div>
+                                <div class="detail-section-content">${intervention.resultat}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">
+                                <i data-lucide="git-commit" style="width:16px;height:16px"></i>
+                                Historique
+                            </div>
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-dot en_attente"></div>
+                                    <div>
+                                        <div class="timeline-title">Signalement créé</div>
+                                        <div class="timeline-date">${formatDate(intervention.date_signalement)}</div>
+                                    </div>
+                                </div>
+                                ${intervention.date_prise_en_charge ? `
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot en_cours"></div>
+                                        <div>
+                                            <div class="timeline-title">Prise en charge par le technicien</div>
+                                            <div class="timeline-date">${formatDate(intervention.date_prise_en_charge)}</div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                ${intervention.date_fin ? `
+                                    <div class="timeline-item">
+                                        <div class="timeline-dot terminee"></div>
+                                        <div>
+                                            <div class="timeline-title">Intervention terminée</div>
+                                            <div class="timeline-date">${formatDate(intervention.date_fin)}</div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="detail-section" style="margin-bottom:0">
+                            <div class="detail-section-title">
+                                <i data-lucide="message-square" style="width:16px;height:16px"></i>
+                                Commentaires (${commentaires.length})
+                            </div>
+
+                            <div class="commentaires-list" id="commentaires-list">
+                                ${commentaires.length === 0
+                                    ? '<p style="font-size:13px;color:#94a3b8;text-align:center;padding:16px 0;margin:0">Aucun commentaire pour le moment</p>'
+                                    : commentaires.map(c => `
+                                        <div class="commentaire">
+                                            <div class="commentaire-avatar">${c.auteur_id === user.id ? 'M' : 'T'}</div>
+                                            <div class="commentaire-body">
+                                                <div class="commentaire-header">
+                                                    <span class="commentaire-auteur">
+                                                        ${c.auteur_id === user.id ? 'Vous' : 'Technicien'}
+                                                    </span>
+                                                    <span class="commentaire-date">${formatDate(c.date)}</span>
+                                                </div>
+                                                <div class="commentaire-contenu">${c.contenu}</div>
+                                            </div>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+
+                            <div style="display:flex;gap:8px">
+                                <input type="text" id="nouveau-commentaire" class="input"
+                                       placeholder="Ajouter un commentaire..."
+                                       onkeydown="if(event.key==='Enter') envoyerCommentaire(${intervention.id})">
+                                <button class="btn btn-primary" onclick="envoyerCommentaire(${intervention.id})">
+                                    <i data-lucide="send" style="width:14px;height:14px"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('detail-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'detail-backdrop') fermerDetail();
+            });
+        }
+
+        function fermerDetail() {
+            document.getElementById('detail-modal-container').innerHTML = '';
+        }
+
+        async function envoyerCommentaire(interventionId) {
+            const input = document.getElementById('nouveau-commentaire');
+            const contenu = input.value.trim();
+            if (!contenu) return;
+
+            try {
+                await API.post(`/commentaires/intervention/${interventionId}`, { contenu });
+                input.value = '';
+                await voirDetail(interventionId);
+                Toast.show('Commentaire ajouté', 'success');
+            } catch (err) {
+                await Modal.alert(err.message, 'danger');
+            }
+        }
+
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                filtreStatut = chip.dataset.statut;
+                afficher();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            filtreRecherche = e.target.value.trim();
+            afficher();
+        });
+
+        (async () => {
+            const user = await Auth.check('employe');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await charger();
+
+            const params = new URLSearchParams(window.location.search);
+            const id = parseInt(params.get('id'));
+            if (id) voirDetail(id);
+        })();
+    </script>
+</body>
+</html>

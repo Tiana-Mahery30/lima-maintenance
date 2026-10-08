@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Technicien - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .stats-grid-8 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 1200px) {
+            .stats-grid-8 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 640px) {
+            .stats-grid-8 { grid-template-columns: 1fr; }
+        }
+
+        .stat-card-lg {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            border: 1px solid var(--lima-border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.15s;
+        }
+        .stat-card-lg:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+        .stat-icon-lg {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .stat-icon-lg-primary { background: #e0e7ff; color: #1a237e; }
+        .stat-icon-lg-warning { background: #fef3c7; color: #92400e; }
+        .stat-icon-lg-info { background: #dbeafe; color: #1e40af; }
+        .stat-icon-lg-success { background: #d1fae5; color: #065f46; }
+        .stat-icon-lg-danger { background: #fee2e2; color: #991b1b; }
+        .stat-value-lg {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+        .stat-label-lg {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* ---------- Notification badge ---------- */
+        .notif-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+
+        /* ---------- Signalements récents ---------- */
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+        }
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .recent-item:hover {
+            background-color: #f8fafc;
+            padding-left: 8px;
+            padding-right: 8px;
+            margin-left: -8px;
+            margin-right: -8px;
+            border-radius: 8px;
+        }
+        .recent-item:last-child { border-bottom: none; }
+        .recent-id {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: #e0e7ff;
+            color: #1a237e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        .recent-content { flex: 1; min-width: 0; }
+        .recent-titre {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .recent-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .recent-date {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        /* ---------- Alertes urgentes ---------- */
+        .urgent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .urgent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: #fef2f2;
+            border-left: 3px solid #ef4444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .urgent-item:hover {
+            background: #fee2e2;
+            transform: translateX(2px);
+        }
+        .urgent-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #991b1b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .urgent-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #991b1b;
+            margin: 0 0 2px 0;
+        }
+        .urgent-desc {
+            font-size: 12px;
+            color: #7f1d1d;
+            margin: 0;
+        }
+
+        .empty-mini {
+            text-align: center;
+            padding: 32px 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .empty-mini i {
+            display: block;
+            margin: 0 auto 8px;
+            opacity: 0.5;
+        }
+
+        /* Layout 2 colonnes */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Technicien</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/technicien/dashboard" class="active">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/technicien/signalements">
+                <i data-lucide="alert-circle" style="width:18px;height:18px"></i>
+                Signalements
+                <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+            </a>
+            <a href="/technicien/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+            <a href="/technicien/utilisateurs">
+                <i data-lucide="users" style="width:18px;height:18px"></i>
+                Utilisateurs
+            </a>
+            <a href="/technicien/statistiques">
+                <i data-lucide="bar-chart-3" style="width:18px;height:18px"></i>
+                Statistiques
+            </a>
+            <a href="/technicien/parametres">
+                <i data-lucide="settings" style="width:18px;height:18px"></i>
+                Paramètres
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Tableau de bord</h1>
+                <p class="page-subtitle">Bienvenue <span data-user-nom></span> — voici l'état actuel du parc</p>
+            </div>
+            <a href="/technicien/signalements" class="btn btn-primary">
+                <i data-lucide="bell" style="width:16px;height:16px"></i>
+                Voir les signalements
+            </a>
+        </div>
+
+        <!-- STATS SIGNALEMENTS -->
+        <h3 style="font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 12px 0">
+            Signalements
+        </h3>
+        <div class="stats-grid-8">
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-primary">
+                    <i data-lucide="clipboard-list" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-total">-</div>
+                    <div class="stat-label-lg">Total signalements</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-warning">
+                    <i data-lucide="clock" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-attente">-</div>
+                    <div class="stat-label-lg">En attente</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-info">
+                    <i data-lucide="loader" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-cours">-</div>
+                    <div class="stat-label-lg">En cours</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-success">
+                    <i data-lucide="check-circle" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-terminee">-</div>
+                    <div class="stat-label-lg">Terminés</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS ÉQUIPEMENTS -->
+        <h3 style="font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 12px 0">
+            Parc informatique
+        </h3>
+        <div class="stats-grid-8">
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-primary">
+                    <i data-lucide="hard-drive" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-equip-total">-</div>
+                    <div class="stat-label-lg">Équipements</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-success">
+                    <i data-lucide="check-circle" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-equip-dispo">-</div>
+                    <div class="stat-label-lg">Disponibles</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-info">
+                    <i data-lucide="user-check" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-equip-occupe">-</div>
+                    <div class="stat-label-lg">Occupés</div>
+                </div>
+            </div>
+            <div class="stat-card-lg">
+                <div class="stat-icon-lg stat-icon-lg-danger">
+                    <i data-lucide="alert-triangle" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value-lg" id="stat-equip-panne">-</div>
+                    <div class="stat-label-lg">En panne</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENU EN 2 COLONNES -->
+        <div class="dashboard-grid" style="margin-top:24px">
+
+            <!-- Colonne gauche : signalements récents -->
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                    <h2 class="card-title" style="margin:0">Signalements récents</h2>
+                    <a href="/technicien/signalements" class="btn btn-secondary btn-sm">
+                        Voir tout
+                        <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+                    </a>
+                </div>
+                <div id="recent-container">
+                    <div class="empty-mini">
+                        <i data-lucide="loader" style="width:24px;height:24px"></i>
+                        Chargement...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Colonne droite : urgents -->
+            <div class="card">
+                <h2 class="card-title" style="margin-bottom:16px;display:flex;align-items:center;gap:8px">
+                    <i data-lucide="flame" style="width:18px;height:18px;color:#ef4444"></i>
+                    Urgences en attente
+                </h2>
+                <div id="urgent-container">
+                    <div class="empty-mini">
+                        <i data-lucide="loader" style="width:24px;height:24px"></i>
+                        Chargement...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function formatDateCourte(dateStr) {
+            const d = new Date(dateStr);
+            const now = new Date();
+            const diff = (now - d) / 1000;
+
+            if (diff < 60) return "à l'instant";
+            if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`;
+            if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+            if (diff < 604800) return `il y a ${Math.floor(diff / 86400)} j`;
+
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+        }
+
+        async function chargerDashboard() {
+            try {
+                // Signalements
+                const interventions = await API.get('/interventions/');
+
+                const stats = {
+                    total: interventions.length,
+                    attente: interventions.filter(i => i.statut === 'en_attente').length,
+                    cours: interventions.filter(i => i.statut === 'en_cours').length,
+                    terminee: interventions.filter(i => i.statut === 'terminee').length,
+                };
+
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-attente').textContent = stats.attente;
+                document.getElementById('stat-cours').textContent = stats.cours;
+                document.getElementById('stat-terminee').textContent = stats.terminee;
+
+                // Équipements
+                const equipements = await API.get('/equipements/');
+
+                const statsEq = {
+                    total: equipements.length,
+                    dispo: equipements.filter(e => e.statut === 'disponible').length,
+                    occupe: equipements.filter(e => e.statut === 'occupé' || e.statut === 'occupe').length,
+                    panne: equipements.filter(e => e.etat === 'en panne').length,
+                };
+
+                document.getElementById('stat-equip-total').textContent = statsEq.total;
+                document.getElementById('stat-equip-dispo').textContent = statsEq.dispo;
+                document.getElementById('stat-equip-occupe').textContent = statsEq.occupe;
+                document.getElementById('stat-equip-panne').textContent = statsEq.panne;
+
+                // Récents (5 derniers)
+                afficherRecents(interventions.slice(0, 5));
+
+                // Urgents en attente
+                const urgents = interventions.filter(i =>
+                    i.statut === 'en_attente' &&
+                    i.priorite && i.priorite.nom === 'Urgente'
+                );
+                afficherUrgents(urgents);
+
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function afficherRecents(liste) {
+            const container = document.getElementById('recent-container');
+
+            if (liste.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-mini">
+                        <i data-lucide="inbox" style="width:32px;height:32px"></i>
+                        Aucun signalement pour le moment
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="recent-list">
+                    ${liste.map(i => `
+                        <div class="recent-item" onclick="window.location.href='/technicien/signalements?id=${i.id}'">
+                            <div class="recent-id">#${i.id}</div>
+                            <div class="recent-content">
+                                <p class="recent-titre">
+                                    ${i.equipement
+                                        ? `${i.equipement.marque} ${i.equipement.modele || ''}`
+                                        : `Équipement #${i.equipement_id}`}
+                                </p>
+                                <p class="recent-desc">${i.description_panne}</p>
+                                <p class="recent-date">${formatDateCourte(i.date_signalement)}</p>
+                            </div>
+                            <div>
+                                ${i.priorite
+                                    ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;background:${i.priorite.couleur}20;color:${i.priorite.couleur}">
+                                           <span style="width:6px;height:6px;border-radius:50%;background:${i.priorite.couleur}"></span>
+                                           ${i.priorite.nom}
+                                       </span>`
+                                    : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function afficherUrgents(liste) {
+            const container = document.getElementById('urgent-container');
+
+            if (liste.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-mini">
+                        <i data-lucide="check-circle" style="width:32px;height:32px;color:#10b981;opacity:0.5"></i>
+                        <p style="color:#10b981;font-weight:500">Aucune urgence en attente</p>
+                        <p style="color:#94a3b8;font-size:12px;margin:4px 0 0 0">Tout est sous contrôle</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="urgent-list">
+                    ${liste.map(i => `
+                        <div class="urgent-item" onclick="window.location.href='/technicien/signalements?id=${i.id}'">
+                            <div class="urgent-icon">
+                                <i data-lucide="alert-triangle" style="width:16px;height:16px"></i>
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <p class="urgent-title">
+                                    ${i.equipement
+                                        ? `${i.equipement.marque} ${i.equipement.modele || ''}`
+                                        : `Équipement #${i.equipement_id}`}
+                                </p>
+                                <p class="urgent-desc">${i.description_panne.substring(0, 60)}${i.description_panne.length > 60 ? '...' : ''}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // ---------- Init ----------
+        (async () => {
+            const user = await Auth.check('technicien');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await chargerDashboard();
+            await WS.updateBadge();
+        })();
+    </script>
+</body>
+</html>

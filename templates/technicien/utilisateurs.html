@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilisateurs - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .mini-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        .mini-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--lima-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mini-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .mini-stat-icon-primary { background: #e0e7ff; color: #1a237e; }
+        .mini-stat-icon-success { background: #d1fae5; color: #065f46; }
+        .mini-stat-icon-info { background: #dbeafe; color: #1e40af; }
+        .mini-stat-icon-warning { background: #fef3c7; color: #92400e; }
+        .mini-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+        .mini-stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            background-color: white;
+            border: 1px solid var(--lima-border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-chip:hover {
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .filter-chip.active {
+            background-color: var(--lima-primary);
+            color: white;
+            border-color: var(--lima-primary);
+        }
+        .filter-chip-count {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+        .filter-chip.active .filter-chip-count {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            max-width: 360px;
+            margin-left: auto;
+            position: relative;
+        }
+        .search-box input {
+            padding-left: 38px;
+            background: white;
+        }
+        .search-box-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* Table */
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .user-table thead tr {
+            background-color: #f8fafc;
+        }
+        .user-table th {
+            padding: 14px 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: left;
+            border-bottom: 1px solid var(--lima-border);
+        }
+        .user-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        .user-table tbody tr {
+            transition: background-color 0.1s;
+        }
+        .user-table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        .user-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cell-employe {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .employe-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a237e, #3949ab);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .employe-avatar.technicien {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
+        .employe-info-nom {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 13px;
+        }
+        .employe-info-email {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .role-technicien {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .role-employe {
+            background-color: #e0e7ff;
+            color: #1a237e;
+        }
+
+        .statut-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .statut-actif {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .statut-inactif {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-edit {
+            background-color: #e0e7ff;
+            color: #1a237e;
+        }
+        .btn-edit:hover {
+            background-color: #1a237e;
+            color: white;
+        }
+        .btn-delete {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .btn-delete:hover {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-activer {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .btn-activer:hover {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: #94a3b8;
+        }
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 4px 0;
+        }
+        .empty-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0 0 20px 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Technicien</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/technicien/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/technicien/signalements">
+                <i data-lucide="alert-circle" style="width:18px;height:18px"></i>
+                Signalements
+                <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+            </a>
+            <a href="/technicien/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+            <a href="/technicien/utilisateurs" class="active">
+                <i data-lucide="users" style="width:18px;height:18px"></i>
+                Utilisateurs
+            </a>
+            <a href="/technicien/statistiques">
+                <i data-lucide="bar-chart-3" style="width:18px;height:18px"></i>
+                Statistiques
+            </a>
+            <a href="/technicien/parametres">
+                <i data-lucide="settings" style="width:18px;height:18px"></i>
+                Paramètres
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Utilisateurs</h1>
+                <p class="page-subtitle">Gérez les comptes employés et techniciens</p>
+            </div>
+            <button class="btn btn-primary" onclick="ouvrirFormAjout()">
+                <i data-lucide="user-plus" style="width:16px;height:16px"></i>
+                Nouvel utilisateur
+            </button>
+        </div>
+
+        <!-- STATS -->
+        <div class="mini-stats">
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-primary">
+                    <i data-lucide="users" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-total">-</div>
+                    <div class="mini-stat-label">Total</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-info">
+                    <i data-lucide="user" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-employes">-</div>
+                    <div class="mini-stat-label">Employés</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-success">
+                    <i data-lucide="wrench" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-techniciens">-</div>
+                    <div class="mini-stat-label">Techniciens</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-warning">
+                    <i data-lucide="user-x" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-inactifs">-</div>
+                    <div class="mini-stat-label">Désactivés</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTRES -->
+        <div class="filter-bar">
+            <div class="filter-chips">
+                <button class="filter-chip active" data-role="">
+                    Tous
+                    <span class="filter-chip-count" id="count-tous">0</span>
+                </button>
+                <button class="filter-chip" data-role="employe">
+                    Employés
+                    <span class="filter-chip-count" id="count-employes">0</span>
+                </button>
+                <button class="filter-chip" data-role="technicien">
+                    Techniciens
+                    <span class="filter-chip-count" id="count-techniciens">0</span>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i data-lucide="search" class="search-box-icon" style="width:18px;height:18px"></i>
+                <input type="text" id="search-input" class="input" placeholder="Rechercher un utilisateur...">
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="card" style="padding:0;overflow:hidden">
+            <div id="table-container">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i data-lucide="loader" style="width:28px;height:28px"></i>
+                    </div>
+                    <p class="empty-text">Chargement...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-container"></div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let tousUtilisateurs = [];
+        let services = [];
+        let filtreRole = '';
+        let filtreRecherche = '';
+
+        function getInitiales(nom) {
+            if (!nom) return '?';
+            return nom.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        async function charger() {
+            try {
+                [tousUtilisateurs, services] = await Promise.all([
+                    API.get('/utilisateurs/'),
+                    API.get('/services/'),
+                ]);
+                mettreAJourCompteurs();
+                afficher();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function mettreAJourCompteurs() {
+            const stats = {
+                total: tousUtilisateurs.length,
+                employes: tousUtilisateurs.filter(u => u.role === 'employe').length,
+                techniciens: tousUtilisateurs.filter(u => u.role === 'technicien').length,
+                inactifs: tousUtilisateurs.filter(u => !u.actif).length,
+            };
+
+            document.getElementById('mini-total').textContent = stats.total;
+            document.getElementById('mini-employes').textContent = stats.employes;
+            document.getElementById('mini-techniciens').textContent = stats.techniciens;
+            document.getElementById('mini-inactifs').textContent = stats.inactifs;
+
+            document.getElementById('count-tous').textContent = stats.total;
+            document.getElementById('count-employes').textContent = stats.employes;
+            document.getElementById('count-techniciens').textContent = stats.techniciens;
+        }
+
+        function afficher() {
+            const container = document.getElementById('table-container');
+
+            let liste = tousUtilisateurs;
+
+            if (filtreRole) {
+                liste = liste.filter(u => u.role === filtreRole);
+            }
+            if (filtreRecherche) {
+                const q = filtreRecherche.toLowerCase();
+                liste = liste.filter(u =>
+                    u.nom.toLowerCase().includes(q) ||
+                    u.email.toLowerCase().includes(q)
+                );
+            }
+
+            if (liste.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i data-lucide="search-x" style="width:32px;height:32px"></i>
+                        </div>
+                        <p class="empty-title">Aucun utilisateur</p>
+                        <p class="empty-text">Modifiez votre recherche ou vos filtres.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th style="width:120px">Rôle</th>
+                            <th style="width:180px">Service</th>
+                            <th style="width:100px">Statut</th>
+                            <th style="width:220px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${liste.map(u => `
+                            <tr>
+                                <td>
+                                    <div class="cell-employe">
+                                        <div class="employe-avatar ${u.role === 'technicien' ? 'technicien' : ''}">
+                                            ${getInitiales(u.nom)}
+                                        </div>
+                                        <div>
+                                            <div class="employe-info-nom">${u.nom}</div>
+                                            <div class="employe-info-email">${u.email}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="role-badge ${u.role === 'technicien' ? 'role-technicien' : 'role-employe'}">
+                                        ${u.role === 'technicien' ? 'Technicien' : 'Employé'}
+                                    </span>
+                                </td>
+                                <td>
+                                    ${u.service_id
+                                        ? (services.find(s => s.id === u.service_id)?.nom || '-')
+                                        : '-'}
+                                </td>
+                                <td>
+                                    <span class="statut-badge ${u.actif ? 'statut-actif' : 'statut-inactif'}">
+                                        ${u.actif ? 'Actif' : 'Désactivé'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                        <button class="btn-action btn-edit" onclick="ouvrirFormModif(${u.id})">
+                                            <i data-lucide="pencil" style="width:12px;height:12px"></i>
+                                            Modifier
+                                        </button>
+                                        ${u.actif
+                                            ? `<button class="btn-action btn-delete" onclick="desactiverUtilisateur(${u.id})">
+                                                   <i data-lucide="user-x" style="width:12px;height:12px"></i>
+                                                   Désactiver
+                                               </button>`
+                                            : `<button class="btn-action btn-activer" onclick="reactiverUtilisateur(${u.id})">
+                                                   <i data-lucide="user-check" style="width:12px;height:12px"></i>
+                                                   Réactiver
+                                               </button>`
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            lucide.createIcons();
+        }
+
+        // ---------- AJOUT ----------
+        function ouvrirFormAjout() {
+            const container = document.getElementById('modal-container');
+
+            const html = `
+                <div class="modal-backdrop" id="form-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:600px;text-align:left">
+                        <button class="modal-close" onclick="fermerModal()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <h2 class="modal-title" style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                            <i data-lucide="user-plus" style="width:22px;height:22px;color:#1a237e"></i>
+                            Nouvel utilisateur
+                        </h2>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="label">Nom complet *</label>
+                                <input type="text" id="form-nom" class="input" placeholder="Ex : Jean Rakoto">
+                            </div>
+                            <div>
+                                <label class="label">Rôle *</label>
+                                <select id="form-role" class="select">
+                                    <option value="employe">Employé</option>
+                                    <option value="technicien">Technicien</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:16px">
+                            <label class="label">Email *</label>
+                            <input type="email" id="form-email" class="input" placeholder="exemple@lima.mg">
+                        </div>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="label">Mot de passe *</label>
+                                <input type="password" id="form-password" class="input" placeholder="Min. 6 caractères">
+                            </div>
+                            <div>
+                                <label class="label">Service</label>
+                                <select id="form-service" class="select">
+                                    <option value="">-- Aucun --</option>
+                                    ${services.map(s => `<option value="${s.id}">${s.nom}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e2e8f0;margin-top:8px">
+                            <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                            <button type="button" class="btn btn-primary" onclick="enregistrerUtilisateur()">
+                                <i data-lucide="check" style="width:16px;height:16px"></i>
+                                Créer l'utilisateur
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('form-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'form-backdrop') fermerModal();
+            });
+        }
+
+        async function enregistrerUtilisateur() {
+            const nom = document.getElementById('form-nom').value.trim();
+            const email = document.getElementById('form-email').value.trim();
+            const mot_de_passe = document.getElementById('form-password').value;
+            const role = document.getElementById('form-role').value;
+            const service_id = document.getElementById('form-service').value;
+
+            if (!nom) return Modal.alert('Nom requis', 'warning');
+            if (!email) return Modal.alert('Email requis', 'warning');
+            if (!mot_de_passe || mot_de_passe.length < 6) {
+                return Modal.alert('Mot de passe requis (min. 6 caractères)', 'warning');
+            }
+
+            const data = {
+                nom,
+                email,
+                mot_de_passe,
+                role,
+                service_id: service_id ? parseInt(service_id) : null,
+            };
+
+            try {
+                await API.post('/auth/register', data);
+                Toast.show('Utilisateur créé avec succès', 'success');
+                fermerModal();
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- MODIFICATION ----------
+        function ouvrirFormModif(id) {
+            const u = tousUtilisateurs.find(x => x.id === id);
+            if (!u) return;
+
+            const container = document.getElementById('modal-container');
+
+            const html = `
+                <div class="modal-backdrop" id="form-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:600px;text-align:left">
+                        <button class="modal-close" onclick="fermerModal()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <h2 class="modal-title" style="margin-bottom:24px;display:flex;align-items:center;gap:10px">
+                            <i data-lucide="pencil" style="width:22px;height:22px;color:#1a237e"></i>
+                            Modifier : ${u.nom}
+                        </h2>
+
+                        <div class="form-row">
+                            <div>
+                                <label class="label">Nom complet *</label>
+                                <input type="text" id="form-nom" class="input" value="${u.nom}">
+                            </div>
+                            <div>
+                                <label class="label">Rôle</label>
+                                <input type="text" class="input" value="${u.role === 'technicien' ? 'Technicien' : 'Employé'}" disabled style="background:#f8fafc">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:16px">
+                            <label class="label">Email *</label>
+                            <input type="email" id="form-email" class="input" value="${u.email}">
+                        </div>
+
+                        <div style="margin-bottom:16px">
+                            <label class="label">Service</label>
+                            <select id="form-service" class="select">
+                                <option value="">-- Aucun --</option>
+                                ${services.map(s => `<option value="${s.id}" ${s.id === u.service_id ? 'selected' : ''}>${s.nom}</option>`).join('')}
+                            </select>
+                        </div>
+
+                        <div style="display:flex;gap:12px;justify-content:flex-end;padding-top:16px;border-top:1px solid #e2e8f0;margin-top:8px">
+                            <button type="button" class="btn btn-secondary" onclick="fermerModal()">Annuler</button>
+                            <button type="button" class="btn btn-primary" onclick="enregistrerModif(${id})">
+                                <i data-lucide="check" style="width:16px;height:16px"></i>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('form-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'form-backdrop') fermerModal();
+            });
+        }
+
+        async function enregistrerModif(id) {
+            const nom = document.getElementById('form-nom').value.trim();
+            const email = document.getElementById('form-email').value.trim();
+            const service_id = document.getElementById('form-service').value;
+
+            if (!nom) return Modal.alert('Nom requis', 'warning');
+            if (!email) return Modal.alert('Email requis', 'warning');
+
+            try {
+                await API.put(`/utilisateurs/${id}`, {
+                    nom,
+                    email,
+                    service_id: service_id ? parseInt(service_id) : null,
+                });
+                Toast.show('Utilisateur modifié', 'success');
+                fermerModal();
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- DÉSACTIVATION ----------
+        async function desactiverUtilisateur(id) {
+            const u = tousUtilisateurs.find(x => x.id === id);
+            if (!u) return;
+
+            const ok = await Modal.confirm(
+                `Désactiver le compte de <strong>${u.nom}</strong> ?<br><br>L'utilisateur ne pourra plus se connecter mais son historique sera conservé.`,
+                { title: 'Désactivation', confirmText: 'Désactiver', type: 'warning' }
+            );
+            if (!ok) return;
+
+            try {
+                await API.delete(`/utilisateurs/${id}`);
+                Toast.show('Utilisateur désactivé', 'success');
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        // ---------- RÉACTIVATION ----------
+        async function reactiverUtilisateur(id) {
+            try {
+                await API.put(`/utilisateurs/${id}`, { actif: true });
+                Toast.show('Utilisateur réactivé', 'success');
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function fermerModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        // ---------- FILTRES ----------
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+                filtreRole = chip.dataset.role;
+                afficher();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            filtreRecherche = e.target.value.trim();
+            afficher();
+        });
+
+        (async () => {
+            const user = await Auth.check('technicien');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await charger();
+            await WS.updateBadge();
+        })();
+    </script>
+</body>
+</html>

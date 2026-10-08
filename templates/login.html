@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="login-page">
+        <div class="login-card">
+            <div class="login-logo">
+                <div style="display:flex;justify-content:center;margin-bottom:16px">
+                    <img src="/static/img/logo-lima.jpeg" alt="LIMA GROUP" class="logo-login">
+                </div>
+                <h1>Maintenance</h1>
+                <p>Gestion et suivi de la maintenance informatique</p>
+            </div>
+
+            <form id="login-form">
+                <div style="margin-bottom:16px">
+                    <label class="label" for="email">Adresse email</label>
+                    <input type="email" id="email" class="input" placeholder="votre.email@lima.mg" required autofocus>
+                </div>
+
+                <div style="margin-bottom:24px">
+                    <label class="label" for="password">Mot de passe</label>
+                    <input type="password" id="password" class="input" placeholder="••••••••" required>
+                </div>
+
+                <div id="login-error" style="display:none;background:#fee2e2;color:#991b1b;padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px"></div>
+
+                <button type="submit" class="btn btn-primary btn-lg" style="width:100%" id="login-btn">
+                    <span id="login-btn-text">Se connecter</span>
+                </button>
+            </form>
+
+            <p style="text-align:center;font-size:12px;color:#94a3b8;margin-top:24px;margin-bottom:0">
+                LIMA GROUP &copy; 2026
+            </p>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        if (API.isAuthenticated()) {
+            Auth.redirectToDashboard();
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('login-error');
+            const btn = document.getElementById('login-btn');
+            const btnText = document.getElementById('login-btn-text');
+
+            errorBox.style.display = 'none';
+            btn.disabled = true;
+            btnText.textContent = 'Connexion en cours...';
+
+            try {
+                await API.login(email, password);
+                Auth.redirectToDashboard();
+            } catch (err) {
+                errorBox.textContent = err.message || 'Erreur de connexion';
+                errorBox.style.display = 'block';
+                btn.disabled = false;
+                btnText.textContent = 'Se connecter';
+            }
+        });
+    </script>
+</body>
+</html>

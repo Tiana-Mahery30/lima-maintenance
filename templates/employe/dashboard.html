@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Employé</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/employe/dashboard" class="active">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/employe/signaler">
+                <i data-lucide="plus-circle" style="width:18px;height:18px"></i>
+                Nouveau signalement
+            </a>
+            <a href="/employe/mes-signalements">
+                <i data-lucide="list" style="width:18px;height:18px"></i>
+                Mes signalements
+            </a>
+            <a href="/employe/equipements">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Bonjour, <span data-user-nom></span></h1>
+                <p class="page-subtitle">Voici un aperçu de vos signalements</p>
+            </div>
+            <a href="/employe/signaler" class="btn btn-primary">
+                <i data-lucide="plus" style="width:16px;height:16px"></i>
+                Signaler une panne
+            </a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-primary">
+                    <i data-lucide="clipboard-list" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="stat-total">-</div>
+                    <div class="stat-label">Total signalements</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-warning">
+                    <i data-lucide="clock" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="stat-attente">-</div>
+                    <div class="stat-label">En attente</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-info">
+                    <i data-lucide="loader" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="stat-cours">-</div>
+                    <div class="stat-label">En cours</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-success">
+                    <i data-lucide="check-circle" style="width:22px;height:22px"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="stat-terminee">-</div>
+                    <div class="stat-label">Terminés</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <h2 class="card-title" style="margin:0">Derniers signalements</h2>
+                <a href="/employe/mes-signalements" class="btn btn-secondary btn-sm">
+                    Voir tout
+                    <i data-lucide="arrow-right" style="width:14px;height:14px"></i>
+                </a>
+            </div>
+            <div id="derniers-signalements">
+                <p style="color:#94a3b8;text-align:center;padding:24px 0">Chargement...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function badgeStatut(statut) {
+            const map = {
+                'en_attente': '<span class="badge badge-attente">En attente</span>',
+                'en_cours': '<span class="badge badge-cours">En cours</span>',
+                'terminee': '<span class="badge badge-terminee">Terminé</span>',
+            };
+            return map[statut] || statut;
+        }
+
+        function badgePriorite(priorite) {
+            if (!priorite) return '-';
+            const map = {
+                'Basse': '<span class="badge badge-basse">Basse</span>',
+                'Normale': '<span class="badge badge-normale">Normale</span>',
+                'Urgente': '<span class="badge badge-urgente">Urgente</span>',
+            };
+            return map[priorite] || priorite;
+        }
+
+        async function chargerDashboard() {
+            try {
+                const interventions = await API.get('/interventions/');
+
+                const stats = {
+                    total: interventions.length,
+                    attente: interventions.filter(i => i.statut === 'en_attente').length,
+                    cours: interventions.filter(i => i.statut === 'en_cours').length,
+                    terminee: interventions.filter(i => i.statut === 'terminee').length,
+                };
+
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-attente').textContent = stats.attente;
+                document.getElementById('stat-cours').textContent = stats.cours;
+                document.getElementById('stat-terminee').textContent = stats.terminee;
+
+                const recents = interventions.slice(0, 5);
+                const container = document.getElementById('derniers-signalements');
+
+                if (recents.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:32px 0;color:#94a3b8">
+                            <i data-lucide="inbox" style="width:40px;height:40px;margin:0 auto 8px;display:block;opacity:0.5"></i>
+                            <p>Aucun signalement pour le moment</p>
+                            <a href="/employe/signaler" class="btn btn-primary btn-sm" style="margin-top:12px">
+                                Créer un signalement
+                            </a>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Statut</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${recents.map(i => `
+                                    <tr>
+                                        <td><strong>#${i.id}</strong></td>
+                                        <td>${formatDate(i.date_signalement)}</td>
+                                        <td>${i.description_panne.substring(0, 50)}${i.description_panne.length > 50 ? '...' : ''}</td>
+                                        <td>${badgeStatut(i.statut)}</td>
+                                        <td>
+                                            <a href="/employe/mes-signalements?id=${i.id}" class="btn btn-secondary btn-sm">
+                                                Voir
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        (async () => {
+            const user = await Auth.check('employe');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            chargerDashboard();
+        })();
+    </script>
+</body>
+</html>

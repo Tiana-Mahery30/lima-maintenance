@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Équipements - LIMA Maintenance</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        /* ============ MINI STATS ============ */
+        .mini-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 900px) {
+            .mini-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+        .mini-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--lima-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .mini-stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .mini-stat-icon-primary { background: #e0e7ff; color: #1a237e; }
+        .mini-stat-icon-success { background: #d1fae5; color: #065f46; }
+        .mini-stat-icon-info { background: #dbeafe; color: #1e40af; }
+        .mini-stat-icon-warning { background: #fef3c7; color: #92400e; }
+        .mini-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1;
+        }
+        .mini-stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        /* ============ FILTRES ============ */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            background-color: white;
+            border: 1px solid var(--lima-border);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .filter-chip:hover {
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+        .filter-chip.active {
+            background-color: var(--lima-primary);
+            color: white;
+            border-color: var(--lima-primary);
+        }
+        .filter-chip-count {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 1px 7px;
+            border-radius: 999px;
+        }
+        .filter-chip.active .filter-chip-count {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 240px;
+            max-width: 400px;
+            margin-left: auto;
+            position: relative;
+        }
+        .search-box input {
+            padding-left: 38px;
+            background: white;
+        }
+        .search-box-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        /* ============ GRILLE D'ÉQUIPEMENTS ============ */
+        .equip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .equip-card {
+            background: white;
+            border: 1px solid var(--lima-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+        .equip-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .equip-card-image {
+            height: 160px;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            position: relative;
+            overflow: hidden;
+        }
+        .equip-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .equip-card-image .placeholder-icon {
+            width: 48px;
+            height: 48px;
+        }
+        .equip-card-image-count {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(15, 23, 42, 0.75);
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        .equip-card-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .equip-card-type {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .equip-card-nom {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 4px 0;
+        }
+        .equip-card-serial {
+            font-size: 12px;
+            color: #94a3b8;
+            font-family: 'Monaco', monospace;
+            margin: 0 0 12px 0;
+        }
+        .equip-card-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        /* Badges */
+        .badge-statut {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .badge-statut .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .badge-disponible {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .badge-disponible .dot { background-color: #10b981; }
+        .badge-occupe {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-occupe .dot { background-color: #3b82f6; }
+        .badge-maintenance {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        .badge-maintenance .dot { background-color: #f59e0b; }
+        .badge-hors-service {
+            background-color: #f1f5f9;
+            color: #475569;
+        }
+        .badge-hors-service .dot { background-color: #94a3b8; }
+
+        .badge-etat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 9px;
+            border-radius: 6px;
+        }
+        .badge-fonctionnel {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .badge-en-panne {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* ============ EMPTY STATE ============ */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--lima-border);
+        }
+        .empty-state-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: #94a3b8;
+        }
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            margin: 0 0 4px 0;
+        }
+        .empty-text {
+            font-size: 13px;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        /* ============ MODAL DÉTAIL ============ */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .detail-info-item {
+            background-color: #f8fafc;
+            padding: 14px 16px;
+            border-radius: 10px;
+        }
+        .detail-info-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .detail-info-value {
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        .detail-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Galerie */
+        .galerie {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .galerie-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .galerie-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .galerie-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Historique interventions */
+        .histo-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .histo-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .histo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .histo-icon.terminee { background: #d1fae5; color: #065f46; }
+        .histo-icon.en_cours { background: #dbeafe; color: #1e40af; }
+        .histo-icon.en_attente { background: #fef3c7; color: #92400e; }
+        .histo-titre {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 2px 0;
+        }
+        .histo-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0 0 2px 0;
+        }
+        .histo-date {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div style="display:flex;align-items:center;gap:12px">
+                <img src="/static/img/logo-lima.jpeg" alt="LIMA" class="logo-sidebar">
+                <div>
+                    <div style="font-size:14px;font-weight:700">LIMA Maintenance</div>
+                    <div style="font-size:11px;opacity:0.7">Espace Employé</div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="/employe/dashboard">
+                <i data-lucide="layout-dashboard" style="width:18px;height:18px"></i>
+                Tableau de bord
+            </a>
+            <a href="/employe/signaler">
+                <i data-lucide="plus-circle" style="width:18px;height:18px"></i>
+                Nouveau signalement
+            </a>
+            <a href="/employe/mes-signalements">
+                <i data-lucide="list" style="width:18px;height:18px"></i>
+                Mes signalements
+            </a>
+            <a href="/employe/equipements" class="active">
+                <i data-lucide="monitor" style="width:18px;height:18px"></i>
+                Équipements
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div style="font-size:12px;opacity:0.7;margin-bottom:8px">
+                <div data-user-nom style="font-weight:600;color:white"></div>
+                <div data-user-role style="opacity:0.7"></div>
+            </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
+                <i data-lucide="log-out" style="width:14px;height:14px"></i>
+                Déconnexion
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Équipements</h1>
+                <p class="page-subtitle">Consultez le parc informatique de l'entreprise</p>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="mini-stats">
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-primary">
+                    <i data-lucide="hard-drive" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-total">-</div>
+                    <div class="mini-stat-label">Total</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-success">
+                    <i data-lucide="check-circle" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-dispo">-</div>
+                    <div class="mini-stat-label">Disponibles</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-info">
+                    <i data-lucide="user-check" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-occupe">-</div>
+                    <div class="mini-stat-label">Occupés</div>
+                </div>
+            </div>
+            <div class="mini-stat">
+                <div class="mini-stat-icon mini-stat-icon-warning">
+                    <i data-lucide="alert-triangle" style="width:20px;height:20px"></i>
+                </div>
+                <div>
+                    <div class="mini-stat-value" id="mini-panne">-</div>
+                    <div class="mini-stat-label">En panne</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FILTRES -->
+        <div class="filter-bar">
+            <div class="filter-chips" id="filter-chips">
+                <button class="filter-chip active" data-statut="">
+                    Tous
+                    <span class="filter-chip-count" id="count-tous">0</span>
+                </button>
+                <button class="filter-chip" data-statut="disponible">
+                    Disponibles
+                    <span class="filter-chip-count" id="count-dispo">0</span>
+                </button>
+                <button class="filter-chip" data-statut="occupé">
+                    Occupés
+                    <span class="filter-chip-count" id="count-occupe">0</span>
+                </button>
+                <button class="filter-chip" data-etat="en panne">
+                    En panne
+                    <span class="filter-chip-count" id="count-panne">0</span>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i data-lucide="search" class="search-box-icon" style="width:18px;height:18px"></i>
+                <input type="text" id="search-input" class="input" placeholder="Rechercher un équipement...">
+            </div>
+        </div>
+
+        <!-- GRILLE -->
+        <div id="equip-container">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i data-lucide="loader" style="width:28px;height:28px"></i>
+                </div>
+                <p class="empty-text">Chargement...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="detail-modal-container"></div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/modal.js"></script>
+    <script src="/static/js/ws.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        lucide.createIcons();
+
+        let tousEquipements = [];
+        let filtreStatut = '';
+        let filtreEtat = '';
+        let filtreRecherche = '';
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function formatDateCourte(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric'
+            });
+        }
+
+        function iconeTypeEquipement(nomType) {
+            const map = {
+                'PC': 'monitor',
+                'Imprimante': 'printer',
+                'Scanner': 'scan',
+                'Écran': 'monitor',
+                'Clavier': 'keyboard',
+                'Souris': 'mouse',
+                'Onduleur': 'battery-charging',
+                'Routeur': 'wifi',
+            };
+            return map[nomType] || 'hard-drive';
+        }
+
+        function badgeStatutEquip(statut) {
+            const map = {
+                'disponible': '<span class="badge-statut badge-disponible"><span class="dot"></span>Disponible</span>',
+                'occupé': '<span class="badge-statut badge-occupe"><span class="dot"></span>Occupé</span>',
+                'occupe': '<span class="badge-statut badge-occupe"><span class="dot"></span>Occupé</span>',
+                'en maintenance': '<span class="badge-statut badge-maintenance"><span class="dot"></span>En maintenance</span>',
+                'hors service': '<span class="badge-statut badge-hors-service"><span class="dot"></span>Hors service</span>',
+            };
+            return map[statut] || `<span class="badge-statut badge-hors-service">${statut}</span>`;
+        }
+
+        function badgeEtat(etat) {
+            if (etat === 'fonctionnel') {
+                return '<span class="badge-etat badge-fonctionnel">Fonctionnel</span>';
+            }
+            return '<span class="badge-etat badge-en-panne">En panne</span>';
+        }
+
+        async function charger() {
+            try {
+                tousEquipements = await API.get('/equipements/');
+                mettreAJourCompteurs();
+                afficher();
+            } catch (err) {
+                console.error(err);
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        function mettreAJourCompteurs() {
+            const stats = {
+                total: tousEquipements.length,
+                dispo: tousEquipements.filter(e => e.statut === 'disponible').length,
+                occupe: tousEquipements.filter(e => e.statut === 'occupé' || e.statut === 'occupe').length,
+                panne: tousEquipements.filter(e => e.etat === 'en panne').length,
+            };
+
+            document.getElementById('mini-total').textContent = stats.total;
+            document.getElementById('mini-dispo').textContent = stats.dispo;
+            document.getElementById('mini-occupe').textContent = stats.occupe;
+            document.getElementById('mini-panne').textContent = stats.panne;
+
+            document.getElementById('count-tous').textContent = stats.total;
+            document.getElementById('count-dispo').textContent = stats.dispo;
+            document.getElementById('count-occupe').textContent = stats.occupe;
+            document.getElementById('count-panne').textContent = stats.panne;
+        }
+
+        function afficher() {
+            const container = document.getElementById('equip-container');
+
+            let liste = tousEquipements;
+
+            if (filtreStatut) {
+                if (filtreStatut === 'occupé') {
+                    liste = liste.filter(e => e.statut === 'occupé' || e.statut === 'occupe');
+                } else {
+                    liste = liste.filter(e => e.statut === filtreStatut);
+                }
+            }
+            if (filtreEtat) {
+                liste = liste.filter(e => e.etat === filtreEtat);
+            }
+            if (filtreRecherche) {
+                const q = filtreRecherche.toLowerCase();
+                liste = liste.filter(e =>
+                    e.marque.toLowerCase().includes(q) ||
+                    (e.modele || '').toLowerCase().includes(q) ||
+                    e.numero_serie.toLowerCase().includes(q) ||
+                    (e.type ? e.type.nom.toLowerCase().includes(q) : false)
+                );
+            }
+
+            if (liste.length === 0) {
+                const vide = tousEquipements.length === 0;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i data-lucide="${vide ? 'inbox' : 'search-x'}" style="width:32px;height:32px"></i>
+                        </div>
+                        <p class="empty-title">${vide ? 'Aucun équipement enregistré' : 'Aucun résultat'}</p>
+                        <p class="empty-text">
+                            ${vide
+                                ? 'Le technicien n\'a pas encore enregistré d\'équipement.'
+                                : 'Essayez de modifier vos filtres ou votre recherche.'}
+                        </p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="equip-grid">
+                    ${liste.map(e => {
+                        const img = e.images && e.images.length > 0 ? e.images[0].chemin : null;
+                        const nbImages = e.images ? e.images.length : 0;
+                        return `
+                            <div class="equip-card" onclick="voirDetail(${e.id})">
+                                <div class="equip-card-image">
+                                    ${img
+                                        ? `<img src="${img}" alt="${e.marque}" onerror="this.style.display='none'; this.parentElement.innerHTML='<i data-lucide=\\'hard-drive\\' class=\\'placeholder-icon\\'></i>'; lucide.createIcons();">`
+                                        : `<i data-lucide="${iconeTypeEquipement(e.type ? e.type.nom : '')}" class="placeholder-icon"></i>`
+                                    }
+                                    ${nbImages > 1
+                                        ? `<div class="equip-card-image-count">
+                                               <i data-lucide="image" style="width:12px;height:12px"></i>
+                                               ${nbImages}
+                                           </div>`
+                                        : ''}
+                                </div>
+                                <div class="equip-card-body">
+                                    <div class="equip-card-type">${e.type ? e.type.nom : 'Équipement'}</div>
+                                    <h3 class="equip-card-nom">${e.marque} ${e.modele || ''}</h3>
+                                    <p class="equip-card-serial">${e.numero_serie}</p>
+                                    <div class="equip-card-badges">
+                                        ${badgeStatutEquip(e.statut)}
+                                        ${badgeEtat(e.etat)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function voirDetail(id) {
+            const equipement = tousEquipements.find(e => e.id === id);
+            if (!equipement) return;
+
+            // Charger l'historique des interventions
+            let historique = [];
+            try {
+                historique = await API.get(`/interventions/equipement/${id}/historique`);
+            } catch (e) { /* ignore */ }
+
+            const container = document.getElementById('detail-modal-container');
+
+            const html = `
+                <div class="modal-backdrop" id="detail-backdrop">
+                    <div class="modal-box modal-box-lg" style="position:relative;max-width:800px;text-align:left">
+                        <button class="modal-close" onclick="fermerDetail()">
+                            <i data-lucide="x" style="width:18px;height:18px"></i>
+                        </button>
+
+                        <div class="detail-header">
+                            <div style="display:flex;align-items:center;gap:14px">
+                                <div style="width:52px;height:52px;border-radius:12px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;color:#1a237e;flex-shrink:0">
+                                    <i data-lucide="${iconeTypeEquipement(equipement.type ? equipement.type.nom : '')}" style="width:26px;height:26px"></i>
+                                </div>
+                                <div>
+                                    <h2 style="font-size:18px;font-weight:700;margin:0;color:#1e293b">
+                                        ${equipement.marque} ${equipement.modele || ''}
+                                    </h2>
+                                    <p style="font-size:13px;color:#94a3b8;margin:2px 0 0 0;font-family:monospace">
+                                        ${equipement.numero_serie}
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                ${badgeStatutEquip(equipement.statut)}
+                                ${badgeEtat(equipement.etat)}
+                            </div>
+                        </div>
+
+                        <div class="detail-info-grid">
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Type</div>
+                                <div class="detail-info-value">${equipement.type ? equipement.type.nom : '-'}</div>
+                            </div>
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Marque</div>
+                                <div class="detail-info-value">${equipement.marque}</div>
+                            </div>
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Modèle</div>
+                                <div class="detail-info-value">${equipement.modele || '-'}</div>
+                            </div>
+                            <div class="detail-info-item">
+                                <div class="detail-info-label">Date d'acquisition</div>
+                                <div class="detail-info-value">${equipement.date_acquisition ? formatDateCourte(equipement.date_acquisition) : '-'}</div>
+                            </div>
+                        </div>
+
+                        ${equipement.images && equipement.images.length > 0 ? `
+                            <div class="detail-section">
+                                <div class="detail-section-title">
+                                    <i data-lucide="images" style="width:16px;height:16px"></i>
+                                    Photos (${equipement.images.length})
+                                </div>
+                                <div class="galerie">
+                                    ${equipement.images.map(img => `
+                                        <div class="galerie-item" onclick="window.open('${img.chemin}', '_blank')">
+                                            <img src="${img.chemin}" alt="Photo équipement"
+                                                 onerror="this.parentElement.innerHTML='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;color:#cbd5e1\\'><i data-lucide=\\'image-off\\' style=\\'width:24px;height:24px\\'></i></div>'; lucide.createIcons();">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="detail-section" style="margin-bottom:0">
+                            <div class="detail-section-title">
+                                <i data-lucide="history" style="width:16px;height:16px"></i>
+                                Historique des interventions (${historique.length})
+                            </div>
+                            ${historique.length === 0
+                                ? '<p style="font-size:13px;color:#94a3b8;text-align:center;padding:20px 0;margin:0">Aucune intervention enregistrée pour cet équipement</p>'
+                                : `<div>
+                                       ${historique.map(h => `
+                                           <div class="histo-item">
+                                               <div class="histo-icon ${h.statut}">
+                                                   <i data-lucide="${h.statut === 'terminee' ? 'check' : h.statut === 'en_cours' ? 'loader' : 'clock'}" style="width:16px;height:16px"></i>
+                                               </div>
+                                               <div style="flex:1;min-width:0">
+                                                   <p class="histo-titre">Signalement #${h.id}</p>
+                                                   <p class="histo-desc">${h.description_panne.substring(0, 80)}${h.description_panne.length > 80 ? '...' : ''}</p>
+                                                   <p class="histo-date">${formatDate(h.date_signalement)}</p>
+                                               </div>
+                                           </div>
+                                       `).join('')}
+                                   </div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            lucide.createIcons();
+
+            document.getElementById('detail-backdrop').addEventListener('click', (e) => {
+                if (e.target.id === 'detail-backdrop') fermerDetail();
+            });
+        }
+
+        function fermerDetail() {
+            document.getElementById('detail-modal-container').innerHTML = '';
+        }
+
+        // ---------- Filtres ----------
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+
+                filtreStatut = chip.dataset.statut || '';
+                filtreEtat = chip.dataset.etat || '';
+                afficher();
+            });
+        });
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            filtreRecherche = e.target.value.trim();
+            afficher();
+        });
+
+        (async () => {
+            const user = await Auth.check('employe');
+            if (!user) return;
+            Auth.afficherUtilisateur();
+            WS.connect();
+            await charger();
+        })();
+    </script>
+</body>
+</html>
