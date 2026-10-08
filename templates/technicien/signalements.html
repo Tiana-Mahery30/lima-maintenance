@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signalements - LIMA Maintenance</title>
+    <link rel="icon" type="image/jpeg" href="/static/img/logo-lima.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/css/style.css">
@@ -487,6 +488,10 @@
                 <div data-user-nom style="font-weight:600;color:white"></div>
                 <div data-user-role style="opacity:0.7"></div>
             </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px;margin-bottom:6px" onclick="Auth.ouvrirModaleProfil()">
+                <i data-lucide="user" style="width:14px;height:14px"></i>
+                Mon profil
+            </button>
             <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
                 <i data-lucide="log-out" style="width:14px;height:14px"></i>
                 Déconnexion

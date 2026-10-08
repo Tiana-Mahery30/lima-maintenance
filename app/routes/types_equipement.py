@@ -46,6 +46,18 @@ def supprimer_type(
     ).first()
     if not type_eq:
         raise HTTPException(status_code=404, detail="Type non trouvé")
+
+    # Vérifier si des équipements utilisent ce type
+    nb_equipements = db.query(models.Equipement).filter(
+        models.Equipement.type_id == type_id
+    ).count()
+
+    if nb_equipements > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible de supprimer : {nb_equipements} équipement(s) utilisent ce type. Modifiez-les ou supprimez-les d'abord."
+        )
+
     db.delete(type_eq)
     db.commit()
     return {"message": "Type supprimé"}

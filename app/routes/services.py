@@ -42,6 +42,18 @@ def supprimer_service(
     service = db.query(models.Service).filter(models.Service.id == service_id).first()
     if not service:
         raise HTTPException(status_code=404, detail="Service non trouvé")
+
+    # Vérifier si des utilisateurs sont dans ce service
+    nb_users = db.query(models.Utilisateur).filter(
+        models.Utilisateur.service_id == service_id
+    ).count()
+
+    if nb_users > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible de supprimer : {nb_users} utilisateur(s) sont dans ce service. Réaffectez-les d'abord."
+        )
+
     db.delete(service)
     db.commit()
     return {"message": "Service supprimé"}

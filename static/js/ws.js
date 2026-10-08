@@ -63,6 +63,17 @@ const WS = {
                     }
                 }
                 break;
+            case 'intervention_annulee':
+                Toast.show(data.message, 'warning');
+                if (window.location.pathname.includes('signalements') ||
+                    window.location.pathname.includes('dashboard')) {
+                    if (typeof chargerInterventions === 'function') {
+                        chargerInterventions();
+                    } else if (typeof charger === 'function') {
+                        charger();
+                    }
+                }
+                break;
             case 'nouveau_commentaire':
                 Toast.show(`${data.auteur} : ${data.contenu}`, 'info');
                 if (typeof chargerCommentaires === 'function' && data.intervention_id) {

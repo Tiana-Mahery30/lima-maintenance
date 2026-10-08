@@ -256,6 +256,53 @@ def historique_equipement(
     ).order_by(models.Intervention.date_signalement.desc()).all()
 
 
+# ---------- Annuler une intervention (employé propriétaire, en attente uniquement) ----------
+@router.put("/{intervention_id}/annuler", response_model=schemas.InterventionOut)
+async def annuler_intervention(
+    intervention_id: int,
+    db: Session = Depends(get_db),
+    utilisateur: models.Utilisateur = Depends(require_authentifie)
+):
+    intervention = db.query(models.Intervention).filter(
+        models.Intervention.id == intervention_id
+    ).first()
+    if not intervention:
+        raise HTTPException(status_code=404, detail="Intervention non trouvée")
+
+    # Vérifier que c'est bien le propriétaire
+    if intervention.utilisateur_id != utilisateur.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous ne pouvez annuler que vos propres signalements"
+        )
+
+    # Vérifier que le statut est "en_attente"
+    if intervention.statut != "en_attente":
+        raise HTTPException(
+            status_code=400,
+            detail="Impossible d'annuler un signalement déjà pris en charge ou terminé"
+        )
+
+    # Vérifier qu'il n'est pas déjà archivé
+    if intervention.archive:
+        raise HTTPException(status_code=400, detail="Ce signalement est déjà annulé")
+
+    # Archiver
+    intervention.archive = True
+    db.commit()
+    db.refresh(intervention)
+
+    # 🔔 Notifier tous les techniciens
+    await manager.diffuser_par_role("technicien", {
+        "type": "intervention_annulee",
+        "intervention_id": intervention.id,
+        "message": f"Signalement #{intervention.id} annulé par {utilisateur.nom}",
+        "date": datetime.utcnow().isoformat()
+    }, db)
+
+    return intervention
+
+
 # ---------- Archiver une intervention (soft delete, technicien) ----------
 @router.delete("/{intervention_id}")
 def archiver_intervention(

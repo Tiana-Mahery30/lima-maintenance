@@ -9,7 +9,7 @@ from .routes import (
     auth, services, types_equipement, priorites,
     utilisateurs, equipements, affectations,
     interventions, commentaires, notifications,
-    statistiques, parametres
+    statistiques, parametres, profil
 )
 from . import pages
 
@@ -44,6 +44,7 @@ app.include_router(commentaires.router)
 app.include_router(notifications.router)
 app.include_router(statistiques.router)
 app.include_router(parametres.router)
+app.include_router(profil.router)
 
 # Pages HTML
 app.include_router(pages.router)

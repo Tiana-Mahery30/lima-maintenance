@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Équipements - LIMA Maintenance</title>
+    <link rel="icon" type="image/jpeg" href="/static/img/logo-lima.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/css/style.css">
@@ -564,6 +565,10 @@
                 <div data-user-nom style="font-weight:600;color:white"></div>
                 <div data-user-role style="opacity:0.7"></div>
             </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px;margin-bottom:6px" onclick="Auth.ouvrirModaleProfil()">
+                <i data-lucide="user" style="width:14px;height:14px"></i>
+                Mon profil
+            </button>
             <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
                 <i data-lucide="log-out" style="width:14px;height:14px"></i>
                 Déconnexion
@@ -1221,6 +1226,12 @@ async function voirDetail(id) {
                 historique = await API.get(`/interventions/equipement/${id}/historique`);
             } catch (err) { /* ignore */ }
 
+            let affectationActive = null;
+            try {
+                const affectations = await API.get(`/affectations/equipement/${id}`);
+                affectationActive = affectations.find(a => a.actif);
+            } catch (err) { /* ignore */ }
+
             const container = document.getElementById('modal-container');
 
             const html = `
@@ -1258,6 +1269,16 @@ async function voirDetail(id) {
                             <div class="detail-info-item">
                                 <div class="detail-info-label">Date d'acquisition</div>
                                 <div class="detail-info-value">${e.date_acquisition ? formatDate(e.date_acquisition) : 'Non renseignée'}</div>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">
+                                <i data-lucide="user-check" style="width:16px;height:16px"></i>
+                                Attribution
+                            </div>
+                            <div id="affectation-container">
+                                <p style="font-size:13px;color:#94a3b8;text-align:center;padding:12px 0">Chargement...</p>
                             </div>
                         </div>
 
@@ -1306,10 +1327,89 @@ async function voirDetail(id) {
 
             container.innerHTML = html;
             lucide.createIcons();
+            afficherAffectation(id, affectationActive);
 
             document.getElementById('detail-backdrop').addEventListener('click', (ev) => {
                 if (ev.target.id === 'detail-backdrop') fermerModal();
             });
+        }
+
+        // ---------- AFFECTATION ----------
+        async function afficherAffectation(equipementId, affectation) {
+            const container = document.getElementById('affectation-container');
+            if (!container) return;
+
+            if (affectation) {
+                container.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:12px;padding:14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px">
+                        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);color:white;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">
+                            ${getInitiales(affectation.utilisateur ? affectation.utilisateur.nom : '?')}
+                        </div>
+                        <div style="flex:1">
+                            <p style="font-size:13px;font-weight:600;color:#065f46;margin:0">
+                                ${affectation.utilisateur ? affectation.utilisateur.nom : 'Employé'}
+                            </p>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0 0">
+                                Depuis le ${formatDate(affectation.date_debut)}
+                            </p>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="terminerAffectation(${affectation.id}, ${equipementId})">
+                            <i data-lucide="x" style="width:14px;height:14px"></i>
+                            Libérer
+                        </button>
+                    </div>
+                `;
+            } else {
+                const employes = utilisateurs.filter(u => u.role === 'employe' && u.actif);
+                container.innerHTML = `
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <select id="affectation-user" class="select" style="flex:1">
+                            <option value="">-- Sélectionner un employé --</option>
+                            ${employes.map(u => `<option value="${u.id}">${u.nom}</option>`).join('')}
+                        </select>
+                        <button class="btn btn-primary" onclick="attribuerEquipement(${equipementId})">
+                            <i data-lucide="user-plus" style="width:14px;height:14px"></i>
+                            Attribuer
+                        </button>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        async function attribuerEquipement(equipementId) {
+            const select = document.getElementById('affectation-user');
+            const userId = select.value;
+            if (!userId) return Modal.alert('Sélectionnez un employé', 'warning');
+
+            try {
+                await API.post('/affectations/', {
+                    equipement_id: equipementId,
+                    utilisateur_id: parseInt(userId),
+                });
+                Toast.show('Équipement attribué', 'success');
+                await charger();
+                voirDetail(equipementId);
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
+        }
+
+        async function terminerAffectation(affectationId, equipementId) {
+            const ok = await Modal.confirm(
+                'Libérer cet équipement ?<br><br>Il redeviendra disponible.',
+                { title: 'Libération', confirmText: 'Libérer', type: 'warning' }
+            );
+            if (!ok) return;
+
+            try {
+                await API.put(`/affectations/${affectationId}/terminer`);
+                Toast.show('Équipement libéré', 'success');
+                await charger();
+                voirDetail(equipementId);
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
         }
 
         // ---------- SUPPRESSION ----------

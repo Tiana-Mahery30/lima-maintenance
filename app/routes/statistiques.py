@@ -374,3 +374,47 @@ def export_pdf(
             "Content-Disposition": f"attachment; filename=rapport_maintenance_{date.today()}.pdf"
         }
     )
+
+
+# ---------- Signalements en retard ----------
+@router.get("/en-retard")
+def stats_en_retard(
+    db: Session = Depends(get_db),
+    _: models.Utilisateur = Depends(require_technicien)
+):
+    """Retourne les signalements en attente depuis plus de X heures."""
+    from datetime import datetime, timedelta
+
+    # Récupérer le délai depuis les paramètres
+    param = db.query(models.Parametre).filter(
+        models.Parametre.cle == "delai_alerte_heures"
+    ).first()
+    delai_heures = int(param.valeur) if param and param.valeur else 48
+
+    seuil = datetime.utcnow() - timedelta(hours=delai_heures)
+
+    interventions = db.query(models.Intervention).filter(
+        models.Intervention.statut == "en_attente",
+        models.Intervention.archive == False,
+        models.Intervention.date_signalement < seuil
+    ).order_by(models.Intervention.date_signalement.asc()).all()
+
+    resultats = []
+    for i in interventions:
+        heures_ecart = (datetime.utcnow() - i.date_signalement).total_seconds() / 3600
+        resultats.append({
+            "id": i.id,
+            "date_signalement": i.date_signalement,
+            "heures_attente": round(heures_ecart, 1),
+            "jours_attente": round(heures_ecart / 24, 1),
+            "employe": i.utilisateur.nom if i.utilisateur else None,
+            "equipement": f"{i.equipement.marque} {i.equipement.modele or ''}" if i.equipement else None,
+            "description": i.description_panne,
+            "priorite": i.priorite.nom if i.priorite else None,
+        })
+
+    return {
+        "delai_heures": delai_heures,
+        "total": len(resultats),
+        "interventions": resultats,
+    }

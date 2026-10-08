@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes signalements - LIMA Maintenance</title>
+    <link rel="icon" type="image/jpeg" href="/static/img/logo-lima.jpeg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="/static/css/style.css">
@@ -497,6 +498,10 @@
                 <div data-user-nom style="font-weight:600;color:white"></div>
                 <div data-user-role style="opacity:0.7"></div>
             </div>
+            <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px;margin-bottom:6px" onclick="Auth.ouvrirModaleProfil()">
+                <i data-lucide="user" style="width:14px;height:14px"></i>
+                Mon profil
+            </button>
             <button class="btn" style="background:rgba(255,255,255,0.1);color:white;width:100%;font-size:13px" onclick="Auth.logout()">
                 <i data-lucide="log-out" style="width:14px;height:14px"></i>
                 Déconnexion
@@ -913,6 +918,26 @@
                             </div>
                         </div>
 
+                        ${intervention.statut === 'en_attente' ? `
+                            <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+                                <div style="width:36px;height:36px;border-radius:8px;background:#fef3c7;color:#92400e;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <i data-lucide="alert-triangle" style="width:18px;height:18px"></i>
+                                </div>
+                                <div style="flex:1">
+                                    <p style="font-size:13px;font-weight:600;color:#92400e;margin:0">
+                                        Ce signalement est encore en attente
+                                    </p>
+                                    <p style="font-size:12px;color:#78350f;margin:2px 0 0 0">
+                                        Vous pouvez l'annuler tant que le technicien ne l'a pas pris en charge.
+                                    </p>
+                                </div>
+                                <button class="btn btn-sm" style="background:#ef4444;color:white;flex-shrink:0" onclick="annulerSignalement(${intervention.id})">
+                                    <i data-lucide="x-circle" style="width:14px;height:14px"></i>
+                                    Annuler
+                                </button>
+                            </div>
+                        ` : ''}
+
                         <div class="detail-section" style="margin-bottom:0">
                             <div class="detail-section-title">
                                 <i data-lucide="message-square" style="width:16px;height:16px"></i>
@@ -962,6 +987,28 @@
 
         function fermerDetail() {
             document.getElementById('detail-modal-container').innerHTML = '';
+        }
+
+        async function annulerSignalement(interventionId) {
+            const ok = await Modal.confirm(
+                `Annuler le signalement <strong>#${interventionId}</strong> ?<br><br>Il ne sera plus visible par le technicien. Cette action est irréversible.`,
+                {
+                    title: 'Annuler le signalement',
+                    confirmText: 'Oui, annuler',
+                    cancelText: 'Non, garder',
+                    type: 'danger'
+                }
+            );
+            if (!ok) return;
+
+            try {
+                await API.put(`/interventions/${interventionId}/annuler`);
+                Toast.show('Signalement annulé', 'success');
+                fermerDetail();
+                await charger();
+            } catch (err) {
+                Modal.alert(err.message, 'danger');
+            }
         }
 
         async function envoyerCommentaire(interventionId) {

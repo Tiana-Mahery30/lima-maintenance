@@ -46,6 +46,18 @@ def supprimer_priorite(
     ).first()
     if not priorite:
         raise HTTPException(status_code=404, detail="Priorité non trouvée")
+
+    # Vérifier si des interventions utilisent cette priorité
+    nb_interventions = db.query(models.Intervention).filter(
+        models.Intervention.priorite_id == priorite_id
+    ).count()
+
+    if nb_interventions > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible de supprimer : {nb_interventions} intervention(s) utilisent cette priorité. Archivez-les d'abord."
+        )
+
     db.delete(priorite)
     db.commit()
     return {"message": "Priorité supprimée"}
