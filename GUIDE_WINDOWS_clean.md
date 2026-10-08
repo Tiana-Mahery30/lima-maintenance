@@ -286,8 +286,8 @@ Dans le terminal, appuie sur **Ctrl+C**.
 
 | **Rôle**       | **Email**            | **Mot de passe** |
 | :------------- | :------------------- | :--------------- |
-| **Technicien** | `technicien@lima.mg` | `lima2026`       |
-| **Employé**    | `jean@lima.mg`       | `employe2026`    |
+| **Technicien** | `technicien@lima.mg` | `kamil2026`       |
+| **Employé**    | `kamil@lima.mg`       | `kamil2026`    |
 | **Employé**    | `marie@lima.mg`      | `employe2026`    |
 
 ---
@@ -548,21 +548,7 @@ git push
 ```
 ---
 
-## Ce que ton ami doit faire
 
-Envoie-lui juste ce message :
-
-> **Salut !**
->
-> Voici comment installer l'application LIMA sur ton PC Windows :
->
-> 1. Ouvre le fichier `GUIDE_WINDOWS.md` sur le repo GitHub
-> 2. Suis les étapes dans l'ordre
-> 3. Si tu bloques à une étape, dis-moi le message d'erreur exact
->
-> Ça prend environ 15 minutes pour tout installer.
-
----
 
 ## Ce que ce guide couvre
 
