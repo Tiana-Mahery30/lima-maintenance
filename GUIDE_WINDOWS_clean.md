@@ -286,8 +286,8 @@ Dans le terminal, appuie sur **Ctrl+C**.
 
 | **Rôle**       | **Email**            | **Mot de passe** |
 | :------------- | :------------------- | :--------------- |
-| **Technicien** | `technicien@lima.mg` | `lima2026`       |
-| **Employé**    | `jean@lima.mg`       | `employe2026`    |
+| **Technicien** | `technicien@lima.mg` | `kamil2026`       |
+| **Employé**    | `kamil@lima.mg`       | `kamil2026`    |
 | **Employé**    | `marie@lima.mg`      | `employe2026`    |
 
 ---
