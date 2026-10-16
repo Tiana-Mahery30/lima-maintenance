@@ -1,12 +1,11 @@
 @echo off
 REM ============================================================
 REM   LIMA GROUP - Gestion Maintenance Informatique
-REM   Script de démarrage (Windows)
+REM   Script de demarrage (Windows)
 REM ============================================================
 
 setlocal
 
-REM Se placer dans le dossier du script
 cd /d "%~dp0"
 
 echo.
@@ -16,26 +15,28 @@ echo   Demarrage du serveur
 echo ============================================================
 echo.
 
-REM ---------- Verifier Python ----------
-python --version >nul 2>&1
+REM ---------- Verifier Python 3.12 via le launcher py ----------
+py -3.12 --version >nul 2>&1
 if errorlevel 1 (
-    echo [ERREUR] Python n'est pas installe ou pas dans le PATH.
+    echo [ERREUR] Python 3.12 n'est pas installe.
     echo.
-    echo Installez Python 3.10+ depuis : https://www.python.org/downloads/
-    echo N'oubliez pas de cocher "Add Python to PATH" pendant l'installation.
+    echo Telechargez Python 3.12.8 depuis :
+    echo   https://www.python.org/downloads/release/python-3128/
+    echo.
+    echo Pendant l'installation, cochez bien "Add Python to PATH".
     echo.
     pause
     exit /b 1
 )
 
-for /f "tokens=*" %%i in ('python --version') do set PYTHON_VERSION=%%i
+for /f "tokens=*" %%i in ('py -3.12 --version') do set PYTHON_VERSION=%%i
 echo [OK] %PYTHON_VERSION% detecte
 echo.
 
 REM ---------- Creer le venv si absent ----------
 if not exist "venv" (
     echo [INFO] Creation de l'environnement virtuel...
-    python -m venv venv
+    py -3.12 -m venv venv
     if errorlevel 1 (
         echo [ERREUR] Echec de la creation du venv.
         pause
