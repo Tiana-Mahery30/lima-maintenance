@@ -654,3 +654,193 @@ tbody tr:last-child td {
     background-color: #f1f5f9;
     color: #475569;
 }
+/* ============ MODAL DÉTAIL ULTRA-COMPACTE ============ */
+.modal-box-lg {
+    max-width: 640px !important;
+    padding: 20px !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+}
+
+/* Header */
+.modal-box-lg .detail-header {
+    padding-bottom: 10px !important;
+    margin-bottom: 12px !important;
+}
+.modal-box-lg .detail-header h2 {
+    font-size: 15px !important;
+    margin: 0 !important;
+}
+.modal-box-lg .detail-header p {
+    font-size: 11px !important;
+    margin-top: 2px !important;
+}
+
+/* Grille info */
+.modal-box-lg .detail-info-grid {
+    gap: 8px !important;
+    margin-bottom: 10px !important;
+}
+.modal-box-lg .detail-info-item {
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+}
+.modal-box-lg .detail-info-label {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+}
+.modal-box-lg .detail-info-value {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+}
+
+/* Sections */
+.modal-box-lg .detail-section {
+    margin-bottom: 10px !important;
+}
+.modal-box-lg .detail-section-title {
+    font-size: 11px !important;
+    margin-bottom: 6px !important;
+    gap: 5px !important;
+}
+.modal-box-lg .detail-section-title svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+.modal-box-lg .detail-section-content {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    line-height: 1.4 !important;
+}
+
+/* Photos */
+.modal-box-lg img {
+    max-height: 140px !important;
+    object-fit: cover;
+    border-radius: 6px !important;
+}
+
+/* Priorité badge */
+.modal-box-lg .priorite-badge {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+}
+
+/* Timeline */
+.modal-box-lg .timeline {
+    padding-left: 20px !important;
+}
+.modal-box-lg .timeline-item {
+    padding-bottom: 10px !important;
+}
+.modal-box-lg .timeline-dot {
+    left: -20px !important;
+    top: 2px !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-width: 2px !important;
+}
+.modal-box-lg .timeline-item:not(:last-child) .timeline-dot::before {
+    height: 14px !important;
+}
+.modal-box-lg .timeline-title {
+    font-size: 11px !important;
+}
+.modal-box-lg .timeline-date {
+    font-size: 10px !important;
+    margin-top: 0 !important;
+}
+
+/* Commentaires */
+.modal-box-lg .commentaires-list {
+    max-height: 140px !important;
+    margin-bottom: 8px !important;
+    gap: 6px !important;
+}
+.modal-box-lg .commentaire {
+    gap: 6px !important;
+}
+.modal-box-lg .commentaire-avatar {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 10px !important;
+}
+.modal-box-lg .commentaire-body {
+    padding: 6px 10px !important;
+    border-radius: 6px !important;
+}
+.modal-box-lg .commentaire-header {
+    margin-bottom: 2px !important;
+}
+.modal-box-lg .commentaire-auteur {
+    font-size: 11px !important;
+}
+.modal-box-lg .commentaire-date {
+    font-size: 9px !important;
+}
+.modal-box-lg .commentaire-contenu {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+}
+
+/* Encart "en attente" jaune */
+.modal-box-lg > div[style*="fef3c7"],
+.modal-box-lg .detail-section > div[style*="fef3c7"] {
+    padding: 10px 12px !important;
+    margin-bottom: 12px !important;
+}
+.modal-box-lg > div[style*="fef3c7"] p,
+.modal-box-lg .detail-section > div[style*="fef3c7"] p {
+    font-size: 11px !important;
+}
+
+/* Formulaires (technicien) */
+.modal-box-lg .form-inline {
+    padding: 10px !important;
+    border-radius: 6px !important;
+    margin-bottom: 10px !important;
+}
+.modal-box-lg .form-inline-title {
+    font-size: 10px !important;
+    margin-bottom: 6px !important;
+}
+.modal-box-lg .form-inline .label {
+    font-size: 10px !important;
+    margin-bottom: 3px !important;
+}
+.modal-box-lg .form-inline .textarea {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+    min-height: 50px !important;
+}
+
+/* Boutons et inputs */
+.modal-box-lg .btn {
+    padding: 6px 12px !important;
+    font-size: 11px !important;
+}
+.modal-box-lg .input,
+.modal-box-lg .select,
+.modal-box-lg .textarea {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+}
+.modal-box-lg .label {
+    font-size: 10px !important;
+    margin-bottom: 3px !important;
+}
+
+/* Badge statut */
+.modal-box-lg .status-badge {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+}
+
+/* Bouton close */
+.modal-box-lg .modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    top: 12px !important;
+    right: 12px !important;
+}
